@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "302669164111",
+    "project_id": "klprouser",
+    "storage_bucket": "klprouser.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:302669164111:android:cd3a86b9021b3771aa043a",
+        "android_client_info": {
+          "package_name": "com.klproind.klpro_user.klpro_user"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDa7rAz12qu0xI_JSb3JFGU79FfSBgNwyo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
