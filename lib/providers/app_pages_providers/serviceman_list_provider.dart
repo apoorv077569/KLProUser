@@ -37,12 +37,16 @@ class ServicemanListProvider with ChangeNotifier {
       }
     }
     animationController = AnimationController(
-        vsync: sync, duration: const Duration(milliseconds: 1200));
+      vsync: sync,
+      duration: const Duration(milliseconds: 1200),
+    );
     _runAnimation();
 
     if (data['availableProviders'] != null) {
       log("availableProviders mapping :${data['availableProviders']}");
-      List<AvailableProvider> available = List<AvailableProvider>.from(data['availableProviders']);
+      List<AvailableProvider> available = List<AvailableProvider>.from(
+        data['availableProviders'],
+      );
       servicemanList = available.map((e) {
         return ProviderModel(
           id: e.id,
@@ -57,9 +61,40 @@ class ServicemanListProvider with ChangeNotifier {
       isLoading = false;
       isLoadingForProvider = false;
     } else {
-      getServicemenByProviderId(context, providerId);
+      debugPrint("APPU_DEBUG SERVICEMAN API DISABLED");
+
+      servicemanList = [
+        ProviderModel(
+          id: 1,
+          name: "Rahul Sharma",
+          reviewRatings: 4.8,
+          media: [Media(originalUrl: "https://i.pravatar.cc/300?img=1")],
+        ),
+
+        ProviderModel(
+          id: 2,
+          name: "Amit Verma",
+          reviewRatings: 4.9,
+          media: [Media(originalUrl: "https://i.pravatar.cc/300?img=2")],
+        ),
+
+        ProviderModel(
+          id: 3,
+          name: "Rohit Kumar",
+          reviewRatings: 4.7,
+          media: [Media(originalUrl: "https://i.pravatar.cc/300?img=3")],
+        ),
+      ];
+
+      /// IMPORTANT
+      searchServicemanList = servicemanList;
+
+      isLoading = false;
+
+      isLoadingForProvider = false;
+
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   @override
@@ -95,20 +130,31 @@ class ServicemanListProvider with ChangeNotifier {
   }
 
   void onCategorySelected(
-      BuildContext context, servicemanId, indexKey, name) async {
+    BuildContext context,
+    servicemanId,
+    indexKey,
+    name,
+  ) async {
     final countRequired = int.parse(requiredServiceman ?? "1");
 
-    final selectProvider =
-        Provider.of<ServiceSelectProvider>(context, listen: false);
+    final selectProvider = Provider.of<ServiceSelectProvider>(
+      context,
+      listen: false,
+    );
 
     if (countRequired == 1) {
       bool isValid = await selectProvider.checkSlotAvailable(
-          context, id: servicemanId, indexKey: indexKey);
+        context,
+        id: servicemanId,
+        indexKey: indexKey,
+      );
       if (isValid) {
         selectedIndex = indexKey;
       } else {
         Fluttertoast.showToast(
-            msg: "$name is Not Available", backgroundColor: Colors.red);
+          msg: "$name is Not Available",
+          backgroundColor: Colors.red,
+        );
       }
     } else {
       if (selectCategory.contains(servicemanId)) {
@@ -116,16 +162,22 @@ class ServicemanListProvider with ChangeNotifier {
       } else {
         if (selectCategory.length >= countRequired) {
           Fluttertoast.showToast(
-              msg: "Only $requiredServiceman required person",
-              backgroundColor: Colors.red);
+            msg: "Only $requiredServiceman required person",
+            backgroundColor: Colors.red,
+          );
         } else {
           bool isValid = await selectProvider.checkSlotAvailable(
-              context, id: servicemanId, indexKey: indexKey);
+            context,
+            id: servicemanId,
+            indexKey: indexKey,
+          );
           if (isValid) {
             selectCategory.add(servicemanId); // Select
           } else {
             Fluttertoast.showToast(
-                msg: "$name is Not Available", backgroundColor: Colors.red);
+              msg: "$name is Not Available",
+              backgroundColor: Colors.red,
+            );
           }
         }
       }
@@ -303,10 +355,7 @@ class ServicemanListProvider with ChangeNotifier {
     notifyListeners();
     animationController!.dispose();
     route.pop(context);
-    getServicemenByProviderId(
-      context,
-      providerId,
-    );
+    getServicemenByProviderId(context, providerId);
   }
 
   applyTap(context) {

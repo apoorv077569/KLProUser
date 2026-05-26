@@ -23,7 +23,7 @@ Color colorCondition(String? text, context) {
     return appColor(context).ongoing;
   } else if (text == appFonts.cancel) {
     return appColor(context).red;
-  /*} else if (text == appFonts.onHold) {
+    /*} else if (text == appFonts.onHold) {
     return appColor(context).red;*/
   } else if (text == "decline" || text == "declined") {
     return appColor(context).red;
@@ -38,29 +38,48 @@ Color colorCondition(String? text, context) {
 
 Color colorConditionById(String? text, context) {
   final dash = Provider.of<DashboardProvider>(context, listen: false);
-  int index = dash.bookingStatusList
-      .indexWhere((element) => element.id.toString() == text);
+  int index = dash.bookingStatusList.indexWhere(
+    (element) => element.id.toString() == text,
+  );
   debugPrint("index :${dash.bookingStatusList[index].slug}");
   if (index > 0) {
     if (dash.bookingStatusList[index].slug == appFonts.pending) {
-      return Color(int.parse(
-          "0xFF${dash.bookingStatusList[index].hexaCode!.split("#")[1]}"));
+      return Color(
+        int.parse(
+          "0xFF${dash.bookingStatusList[index].hexaCode!.split("#")[1]}",
+        ),
+      );
     } else if (dash.bookingStatusList[index].slug == appFonts.accepted ||
         dash.bookingStatusList[index].slug == appFonts.assigned) {
-      return Color(int.parse(
-          "0xFF${dash.bookingStatusList[index].hexaCode!.split("#")[1]}"));
+      return Color(
+        int.parse(
+          "0xFF${dash.bookingStatusList[index].hexaCode!.split("#")[1]}",
+        ),
+      );
     } else if (dash.bookingStatusList[index].slug == appFonts.onGoing) {
-      return Color(int.parse(
-          "0xFF${dash.bookingStatusList[index].hexaCode!.split("#")[1]}"));
+      return Color(
+        int.parse(
+          "0xFF${dash.bookingStatusList[index].hexaCode!.split("#")[1]}",
+        ),
+      );
     } else if (dash.bookingStatusList[index].slug == appFonts.cancel) {
-      return Color(int.parse(
-          "0xFF${dash.bookingStatusList[index].hexaCode!.split("#")[1]}"));
+      return Color(
+        int.parse(
+          "0xFF${dash.bookingStatusList[index].hexaCode!.split("#")[1]}",
+        ),
+      );
     } else if (dash.bookingStatusList[index].slug == appFonts.assigned) {
-      return Color(int.parse(
-          "0xFF${dash.bookingStatusList[index].hexaCode!.split("#")[1]}"));
+      return Color(
+        int.parse(
+          "0xFF${dash.bookingStatusList[index].hexaCode!.split("#")[1]}",
+        ),
+      );
     } else if (dash.bookingStatusList[index].slug == appFonts.onHold) {
-      return Color(int.parse(
-          "0xFF${dash.bookingStatusList[index].hexaCode!.split("#")[1]}"));
+      return Color(
+        int.parse(
+          "0xFF${dash.bookingStatusList[index].hexaCode!.split("#")[1]}",
+        ),
+      );
     } else {
       return appColor(context).primary;
     }
@@ -110,8 +129,10 @@ Future<bool> isNetworkConnection() async {
   if (connectivityResult.contains(ConnectivityResult.none)) {
     return false;
   } else {
-    final result = await InternetAddress.lookup('google.com',
-        type: InternetAddressType.any); //Check For Internet Connection
+    final result = await InternetAddress.lookup(
+      'google.com',
+      type: InternetAddressType.any,
+    ); //Check For Internet Connection
     if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
       return true;
     } else {
@@ -123,7 +144,8 @@ Future<bool> isNetworkConnection() async {
 String? getDistance(context, lat1, long1) {
   var p = 0.017453292519943295;
   var c = cos;
-  var a = 0.5 -
+  var a =
+      0.5 -
       c((double.parse(lat1) - position!.latitude) * p) / 2 +
       c(double.parse(lat1) * p) *
           c(double.parse(long1) * p) *
@@ -137,8 +159,9 @@ Color fromHex(String hexString) {
 
   /// String v = hexString.replaceAll("#", "0xFF");
   //buffer.write(hexString.replaceFirst('#', ''));
-  return Color(int.parse(hexString.substring(1, hexString.length), radix: 16) +
-      0xFF000000);
+  return Color(
+    int.parse(hexString.substring(1, hexString.length), radix: 16) + 0xFF000000,
+  );
 }
 
 getFcmToken() async {
@@ -184,9 +207,11 @@ slots(start, end, gap) {
   }
 
   List<String> slotsList = [];
-  for (int i = startTimeInMinutes;
-      i <= closeTimeInMinutes;
-      i += spaceInMinutes) {
+  for (
+    int i = startTimeInMinutes;
+    i <= closeTimeInMinutes;
+    i += spaceInMinutes
+  ) {
     slotsList.add(_getTimeInStringForMinutesSinceMidnight(i));
   }
 
@@ -296,8 +321,10 @@ getTotalRequiredServiceMan(List<CartModel> cart, id, isPackage) {
 bool isInCart(context, id) {
   final cart = Provider.of<CartProvider>(context, listen: false);
   return cart.cartList
-      .where((element) =>
-          element.isPackage == false && element.serviceList!.id == id)
+      .where(
+        (element) =>
+            element.isPackage == false && element.serviceList!.id == id,
+      )
       .isNotEmpty;
 }
 
@@ -316,8 +343,9 @@ bool isServiceRate(review) {
   print("LENG :${review!.length} ");
   bool isNotComplete = false;
 
-  int index =
-      review.indexWhere((element) => element.consumer!.id == userModel?.id);
+  int index = review.indexWhere(
+    (element) => element.consumer!.id == userModel?.id,
+  );
   if (index >= 0) {
     isNotComplete = true;
   } else {
@@ -412,39 +440,20 @@ double totalServicesChargesAndTotalBooking(BookingModel bookingModel) {
   return price;
 }
 
-/// Capitalize given String
-String capitalizeFirstLetter(text) {
-  if (text.isEmpty) return '';
-  return text[0].toUpperCase() + text.substring(1);
-}
 // String capitalizeFirstLetter(val) {
 //   return (val != null)
 //       ? (val![0].toString().toUpperCase() + val!.substring(1))
 //       : validate(value: val);
 // }
 
-// Check null string, return given value if null
-String validate({String? value}) {
-  if (isEmptyOrNull(value)) {
-    return value!;
-  } else {
-    return value!;
-  }
-}
-
-/// Returns true if given String is null or isEmpty
-bool isEmptyOrNull(val) =>
-    val == null ||
-    (val != null && val!.isEmpty) ||
-    (val != null && val! == 'null');
-
 //get address data
 String getAddress(context, addressId) {
   String address = "";
   final loc = Provider.of<LocationProvider>(context, listen: false);
 
-  int index = loc.addressList
-      .indexWhere((element) => element.id.toString() == addressId.toString());
+  int index = loc.addressList.indexWhere(
+    (element) => element.id.toString() == addressId.toString(),
+  );
   print("loc.addressList :$index");
   if (index >= 0) {
     address =
@@ -461,3 +470,38 @@ RateMyApp rateMyApp = RateMyApp(
   remindLaunches: 10,
   googlePlayIdentifier: 'com.webiots.fixituserapi',
 );
+
+/// Capitalize given String
+String capitalizeFirstLetter(text) {
+  if (text == null) {
+    return '';
+  }
+
+  if (text.toString().isEmpty) {
+    return '';
+  }
+
+  return text.toString()[0].toUpperCase() + text.toString().substring(1);
+}
+
+// Check null string, return given value if null
+String validate({String? value}) {
+  if (value == null) {
+    return '';
+  }
+
+  if (value.isEmpty) {
+    return '';
+  }
+
+  return value;
+}
+
+/// Returns true if given String is null or isEmpty
+bool isEmptyOrNull(val) {
+  if (val == null) {
+    return true;
+  }
+
+  return val.toString().isEmpty || val.toString() == 'null';
+}

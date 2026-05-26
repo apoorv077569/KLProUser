@@ -98,7 +98,7 @@ class AppRoute {
     routeName.helpSupport: (p0) => const HelpSupportScreen(),
     routeName.notifications: (p0) => const NotificationScreen(),
     routeName.location: (p0) => const LocationScreen(),
-    routeName.currentLocation: (p0) => const CurrentLocationScreen(),
+    // routeName.currentLocation: (p0) => const CurrentLocationScreen(),
     routeName.addNewLocation: (p0) => const AddNewLocation(),
     routeName.search: (p0) => const SearchScreen(),
     routeName.latestBlogViewAll: (p0) => const LatestBlogViewAll(),

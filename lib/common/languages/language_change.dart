@@ -26,44 +26,11 @@ class LanguageProvider with ChangeNotifier {
     getLanguageTranslate(context);
   }
   getLanguage() async {
-    try {
-      translations = Translation.defaultTranslations();
-      await apiServices
-          .getApi(api.systemLanguage, [], isToken: false)
-          .then((value) {
-        if (value.isSuccess!) {
-          languageList.clear(); // Clear before adding
-          for (var item in value.data) {
-            SystemLanguage systemLanguage = SystemLanguage.fromJson(item);
-            if (!languageList.contains(systemLanguage)) {
-              languageList.add(systemLanguage);
-            }
-          }
+    debugPrint("APPU_DEBUG LANGUAGE API DISABLED");
 
-          // ✅ Keep only English language, comment out others
-          languageList = languageList
-              .where((lang) =>
-                  lang.appLocale != null &&
-                  lang.appLocale!.split("_")[0].toLowerCase() == "en")
-              .toList();
+    translations = Translation.defaultTranslations();
 
-          // ✅ Compare with saved locale and set selected index
-          String? selectedLocaleCode =
-              sharedPreferences.getString("selectedLocale") ?? "en";
-          int index = languageList.indexWhere((element) =>
-              element.appLocale?.split("_")[0] == selectedLocaleCode);
-          if (index != -1) {
-            selectedIndex = index;
-            log("✅ Selected index set to $selectedIndex for locale $selectedLocaleCode");
-          } else {
-            selectedIndex = 0; // fallback
-          }
-        }
-        notifyListeners();
-      });
-    } catch (e, s) {
-      debugPrint("EEEE NOTI LANGUAGE $e-=-=-=-$s");
-    }
+    notifyListeners();
   }
 
   // getLanguage() async {
@@ -96,14 +63,20 @@ class LanguageProvider with ChangeNotifier {
 
     currentLanguage = newLocale.name!;
     convertedLocale = Locale(
-        newLocale.appLocale!.split("_")[0], newLocale.appLocale!.split("_")[1]);
+      newLocale.appLocale!.split("_")[0],
+      newLocale.appLocale!.split("_")[1],
+    );
 
     locale = convertedLocale;
     sharedPreferences.setString(
-        'selectedLocale', locale!.languageCode.toString());
+      'selectedLocale',
+      locale!.languageCode.toString(),
+    );
     log("GET:: ${sharedPreferences.getString("selectedLocale")}");
-    getLanguageTranslate(context,
-        languageCode: locale!.languageCode.toString());
+    getLanguageTranslate(
+      context,
+      languageCode: locale!.languageCode.toString(),
+    );
     notifyListeners();
   }
 
@@ -114,39 +87,16 @@ class LanguageProvider with ChangeNotifier {
 
   bool? isTranslateLoader = false;
   //translateText api
-  getLanguageTranslate(context,
-      {bool? isSelectLanguage = false, String? languageCode}) async {
-    isTranslateLoader = true;
+  getLanguageTranslate(
+    context, {
+    bool? isSelectLanguage = false,
+    String? languageCode,
+  }) async {
+    debugPrint("APPU_DEBUG TRANSLATION API DISABLED");
+
+    translations = Translation.defaultTranslations();
+
     notifyListeners();
-    try {
-      translations = Translation.defaultTranslations();
-      final response = await apiServices.getApi(
-          "${api.translate}/${locale!.languageCode}", [],
-          isToken: false, isData: true);
-
-      if (response.isSuccess!) {
-        isTranslateLoader = false;
-        translations = Translation.fromJson(
-          response.data,
-        ); // Directly pass the map
-        //   log("Loaded translations: ${response.data}");
-
-        notifyListeners();
-      } else {
-        isTranslateLoader = false;
-        log('Failed to load translations, using defaults');
-        translations = Translation.defaultTranslations();
-        notifyListeners();
-      }
-    } catch (e, s) {
-      isTranslateLoader = false;
-      log('Error Translation: $e==$s');
-      translations = Translation.defaultTranslations();
-      notifyListeners();
-    } finally {
-      isTranslateLoader = false;
-      notifyListeners();
-    }
   }
   // getLanguageTranslate() async {
   //   log("locale!.languageCode ${locale!.languageCode}");
@@ -184,9 +134,12 @@ class LanguageProvider with ChangeNotifier {
       log("definedCurrentLanguage:::$definedCurrentLanguage");
       definedCurrentLanguage = currentLanguage;
     } else {
-      log("locale from currentData: ${Localizations.localeOf(context).toString()}");
-      definedCurrentLanguage = languageHelper
-          .convertLocaleToLangName(Localizations.localeOf(context).toString());
+      log(
+        "locale from currentData: ${Localizations.localeOf(context).toString()}",
+      );
+      definedCurrentLanguage = languageHelper.convertLocaleToLangName(
+        Localizations.localeOf(context).toString(),
+      );
     }
 
     return definedCurrentLanguage;

@@ -16,13 +16,17 @@ class CustomDateSelectionLayout extends StatelessWidget {
       builder: (context, value, child) {
         return Container(
           padding: const EdgeInsets.symmetric(
-              horizontal: Sizes.s15, vertical: Sizes.s10),
+            horizontal: Sizes.s15,
+            vertical: Sizes.s10,
+          ),
           decoration: ShapeDecoration(
             color: appColor(context).whiteBg,
             shape: SmoothRectangleBorder(
               side: BorderSide(color: appColor(context).stroke),
-              borderRadius:
-                  SmoothBorderRadius(cornerRadius: 8, cornerSmoothing: 1),
+              borderRadius: SmoothBorderRadius(
+                cornerRadius: 8,
+                cornerSmoothing: 1,
+              ),
             ),
           ),
           child: Row(
@@ -45,9 +49,9 @@ class CustomDateSelectionLayout extends StatelessWidget {
                                   margin: EdgeInsets.only(
                                     bottom:
                                         value.customSelectedDates.length - 1 !=
-                                                e.key
-                                            ? Sizes.s8
-                                            : 0,
+                                            e.key
+                                        ? Sizes.s8
+                                        : 0,
                                     right: Sizes.s5,
                                   ),
                                   padding: const EdgeInsets.symmetric(
@@ -55,8 +59,12 @@ class CustomDateSelectionLayout extends StatelessWidget {
                                     vertical: Sizes.s5,
                                   ),
                                   decoration: ShapeDecoration(
-                                    color:
-                                        const Color.fromRGBO(84, 101, 255, 0.1),
+                                    color: const Color.fromRGBO(
+                                      84,
+                                      101,
+                                      255,
+                                      0.1,
+                                    ),
                                     shape: SmoothRectangleBorder(
                                       borderRadius: SmoothBorderRadius(
                                         cornerRadius: 8,
@@ -97,8 +105,9 @@ class CustomDateSelectionLayout extends StatelessWidget {
                     if (value.customSelectedDates.isEmpty)
                       Text(
                         language(context, translations!.selectDateOnly),
-                        style: appCss.dmDenseMedium14
-                            .textColor(appColor(context).lightText),
+                        style: appCss.dmDenseMedium14.textColor(
+                          appColor(context).lightText,
+                        ),
                       ),
                   ],
                 ),
@@ -115,7 +124,15 @@ class CustomDateSelectionLayout extends StatelessWidget {
             ],
           ),
         ).inkWell(
-          onTap: () => value.onCustomDateBottomSheet(context),
+          onTap: () {
+            debugPrint("APPU_DEBUG DATE SELECTION BUTTON CLICKED");
+
+            debugPrint("APPU_DEBUG OPENING CUSTOM DATE BOTTOM SHEET");
+
+            value.onCustomDateBottomSheet(context);
+
+            debugPrint("APPU_DEBUG CUSTOM DATE BOTTOM SHEET OPENED");
+          },
         );
       },
     );

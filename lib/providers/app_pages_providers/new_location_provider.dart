@@ -70,8 +70,7 @@ class NewLocationProvider with ChangeNotifier {
       isSearching = true;
       notifyListeners();
 
-      String api =
-          "https://places.googleapis.com/v1/places:autocomplete";
+      String api = "https://places.googleapis.com/v1/places:autocomplete";
 
       try {
         var res = await http.post(
@@ -118,8 +117,7 @@ class NewLocationProvider with ChangeNotifier {
 
     showLoading(context);
 
-    String request =
-        "https://places.googleapis.com/v1/places/$placeID";
+    String request = "https://places.googleapis.com/v1/places/$placeID";
 
     try {
       var res = await http.get(
@@ -152,10 +150,14 @@ class NewLocationProvider with ChangeNotifier {
             }
             if (types.contains('country')) {
               String countryName = component['longText'] ?? "";
-              final locationCtrl =
-                  Provider.of<LocationProvider>(context, listen: false);
-              int ind = locationCtrl.countryStateList.indexWhere((element) =>
-                  element.name!.toLowerCase() == countryName.toLowerCase());
+              final locationCtrl = Provider.of<LocationProvider>(
+                context,
+                listen: false,
+              );
+              int ind = locationCtrl.countryStateList.indexWhere(
+                (element) =>
+                    element.name!.toLowerCase() == countryName.toLowerCase(),
+              );
               if (ind >= 0) {
                 country = locationCtrl.countryStateList[ind];
                 countryValue = country!.id;
@@ -164,10 +166,14 @@ class NewLocationProvider with ChangeNotifier {
             }
             if (types.contains('administrative_area_level_1')) {
               String stateName = component['longText'] ?? "";
-              final locationCtrl =
-                  Provider.of<LocationProvider>(context, listen: false);
-              int stateIndex = locationCtrl.stateList.indexWhere((element) =>
-                  element.name!.toLowerCase() == stateName.toLowerCase());
+              final locationCtrl = Provider.of<LocationProvider>(
+                context,
+                listen: false,
+              );
+              int stateIndex = locationCtrl.stateList.indexWhere(
+                (element) =>
+                    element.name!.toLowerCase() == stateName.toLowerCase(),
+              );
               if (stateIndex >= 0) {
                 state = locationCtrl.stateList[stateIndex];
                 stateValue = state!.id;
@@ -180,8 +186,10 @@ class NewLocationProvider with ChangeNotifier {
           hideLoading(context);
 
           // Update map and address in LocationProvider
-          final locationCtrl =
-              Provider.of<LocationProvider>(context, listen: false);
+          final locationCtrl = Provider.of<LocationProvider>(
+            context,
+            listen: false,
+          );
           locationCtrl.getAddressFromLatLng(context);
         } else {
           log("Place Details (v1) Error: No location data found");
@@ -223,21 +231,30 @@ class NewLocationProvider with ChangeNotifier {
       }
 
       countryValue = address!.countryId!;
-      int index = locationCtrl.countryStateList
-          .indexWhere((element) => element.id == countryValue);
+      int index = locationCtrl.countryStateList.indexWhere(
+        (element) => element.id == countryValue,
+      );
       country = locationCtrl.countryStateList[index];
       locationCtrl.stateList = locationCtrl.countryStateList[index].state!;
       stateValue = address!.stateId!;
       locationCtrl.notifyListeners();
 
-      selectIndex = categoryList.indexWhere((element) =>
-          element.toString().toLowerCase() == address!.type!.toLowerCase());
+      selectIndex = categoryList.indexWhere(
+        (element) =>
+            element.toString().toLowerCase() == address!.type!.toLowerCase(),
+      );
       state = locationCtrl.stateList[stateValue!];
       isCheck = address!.isPrimary == 1 ? true : false;
       log("DIAOCLODE1 :${address!.code}");
-      int dialCodeIndex = countriesEnglish.indexWhere((element) =>
-          element['dial_code'] ==
-          "${address!.code != null ? address!.code!.contains("+") ? "" : "+" : "+"}${address!.code}");
+      int dialCodeIndex = countriesEnglish.indexWhere(
+        (element) =>
+            element['dial_code'] ==
+            "${address!.code != null
+                ? address!.code!.contains("+")
+                      ? ""
+                      : "+"
+                : "+"}${address!.code}",
+      );
       log("index :$index");
       if (index >= 0) {
         dialCode = countriesEnglish[dialCodeIndex]['dial_code'];
@@ -248,14 +265,22 @@ class NewLocationProvider with ChangeNotifier {
       nameCtrl.text = "";
 
       numberCtrl.text = "";
-      zipCtrl.text = locationCtrl.place!.postalCode!;
+      zipCtrl.text = locationCtrl.place?.postalCode ?? "";
       streetCtrl.text = "";
 
-      cityCtrl.text = locationCtrl.place!.locality!;
+      locationCtrl.place?.locality ?? "";
       isEdit = false;
-      int ind = locationCtrl.countryStateList.indexWhere((element) =>
-          element.name!.toLowerCase() ==
-          locationCtrl.place!.country!.toLowerCase());
+      int ind = -1;
+
+      if (locationCtrl.place != null && locationCtrl.place?.country != null) {
+        ind = locationCtrl.countryStateList.indexWhere(
+          (element) =>
+              element.name!.toLowerCase() ==
+              (locationCtrl.place?.country ?? "").toLowerCase(),
+        );
+      }
+
+      debugPrint("APPU_DEBUG COUNTRY INDEX => $ind");
       log("DDD :$ind");
 
       if (ind >= 0) {
@@ -264,9 +289,11 @@ class NewLocationProvider with ChangeNotifier {
 
         locationCtrl.stateList = locationCtrl.countryStateList[ind].state!;
       }
-      int stateIndex = locationCtrl.stateList.indexWhere((element) =>
-          element.name!.toLowerCase() ==
-          locationCtrl.place!.administrativeArea!.toLowerCase());
+      int stateIndex = locationCtrl.stateList.indexWhere(
+        (element) =>
+            element.name!.toLowerCase() ==
+            (locationCtrl.place?.administrativeArea ?? "").toLowerCase(),
+      );
       log("stateIndex :$stateIndex");
       if (stateIndex >= 0) {
         state = locationCtrl.stateList[stateIndex];
@@ -274,7 +301,7 @@ class NewLocationProvider with ChangeNotifier {
       }
       notifyListeners();
 
-      streetCtrl.text = locationCtrl.place!.street!;
+      streetCtrl.text = locationCtrl.place?.street ?? "";
       /* countryValue = locationCtrl.countryStateList[0].id!;
       int index = locationCtrl.countryStateList
           .indexWhere((element) => element.id == countryValue);
@@ -324,8 +351,9 @@ class NewLocationProvider with ChangeNotifier {
 
     final locationCtrl = Provider.of<LocationProvider>(context, listen: false);
     country = c;
-    int index = locationCtrl.countryStateList
-        .indexWhere((element) => element.id == countryValue);
+    int index = locationCtrl.countryStateList.indexWhere(
+      (element) => element.id == countryValue,
+    );
     if (index >= 0) {
       locationCtrl.stateList = locationCtrl.countryStateList[index].state!;
       /*   stateValue = locationCtrl.stateList[0].id!;
@@ -351,14 +379,46 @@ class NewLocationProvider with ChangeNotifier {
         log("ADDDD");
         if (country != null) {
           if (state != null) {
-            addAddress(context);
+            /// SET LOCATION DATA
+
+            userPrimaryAddress = PrimaryAddress(
+              address: streetCtrl.text,
+
+              city: cityCtrl.text,
+
+              postalCode: zipCtrl.text,
+
+              latitude: position?.latitude.toString(),
+
+              longitude: position?.longitude.toString(),
+            );
+
+            /// UPDATE CURRENT ADDRESS
+
+            street = "${streetCtrl.text}, ${cityCtrl.text}";
+
+            currentAddress = street;
+
+            debugPrint("APPU_DEBUG LOCATION SET SUCCESS");
+
+            notifyListeners();
+
+            /// DUMMY SAVE
+
+            debugPrint("APPU_DEBUG DUMMY LOCATION SAVED");
+
+            /// CLOSE SCREEN
+
+            Navigator.of(context).pop(true);
           } else {
             Fluttertoast.showToast(
-                msg: language(context, translations!.selectCountry));
+              msg: language(context, translations!.selectCountry),
+            );
           }
         } else {
           Fluttertoast.showToast(
-              msg: language(context, translations!.selectCountry));
+            msg: language(context, translations!.selectCountry),
+          );
         }
       }
     }
@@ -371,8 +431,10 @@ class NewLocationProvider with ChangeNotifier {
     isLoading = true;
     notifyListeners();
     try {
-      final locationCtrl =
-          Provider.of<LocationProvider>(context, listen: false);
+      final locationCtrl = Provider.of<LocationProvider>(
+        context,
+        listen: false,
+      );
       log("countryValue :$countryValue");
       log("countryValue :${locationCtrl.countryStateList.length}");
       showLoading(context);
@@ -390,44 +452,76 @@ class NewLocationProvider with ChangeNotifier {
         "alternative_phone": numberCtrl.text,
         "code": dialCode,
         "status": "1",
-        "is_primary": isCheck ? true : false
+        "is_primary": isCheck ? true : false,
       };
 
       log("body : $body");
-      await apiServices
-          .postApi('$apiUrl/address', body, isToken: true)
-          .then((value) async {
+      await apiServices.postApi('$apiUrl/address', body, isToken: true).then((
+        value,
+      ) async {
         if (value.isSuccess!) {
+          /// REFRESH LOCATION LIST
+
           await locationCtrl.getLocationList(context);
-          await route.pushNamed(
-              context,
-              routeName
-                  .myLocation); /* .then((e) {
+
+          /// SET LATEST LOCATION AS PRIMARY
+
+          if (locationCtrl.addressList.isNotEmpty) {
+            userPrimaryAddress = locationCtrl.addressList.first;
+
+            setPrimaryAddress = 0;
+
+            street =
+                "${userPrimaryAddress?.address}, "
+                "${userPrimaryAddress?.city}";
+
+            currentAddress = street;
+
+            debugPrint("APPU_DEBUG PRIMARY LOCATION SET");
+
+            notifyListeners();
+          }
+
+          /// REDIRECT TO SLOT 1
+
+          route.pushReplacementNamed(context, routeName.slotBookingScreen);
+
+          debugPrint("APPU_DEBUG REDIRECTED TO SLOT 1"); /* .then((e) {
             /*  animationController!.reset(); */
             notifyListeners();
           }).then((e) {
             locationCtrl.getLocationList(context);
           }); */
           /*  await locationCtrl.getLocationList(context); */
-          final locationProvider =
-              Provider.of<LocationProvider>(context, listen: false);
+          final locationProvider = Provider.of<LocationProvider>(
+            context,
+            listen: false,
+          );
           if (isLogin == true) {
             log("message=-=-=-=-=-=-=-=-=-=-");
-            locationProvider.getZoneId(context,
-                isLocation: true,
-                lan: position!.longitude.toString(),
-                lat: position!.latitude.toString());
+            locationProvider.getZoneId(
+              context,
+              isLocation: true,
+              lan: position!.longitude.toString(),
+              lat: position!.latitude.toString(),
+            );
 
-            final dashCtrl =
-                Provider.of<DashboardProvider>(context, listen: false);
+            final dashCtrl = Provider.of<DashboardProvider>(
+              context,
+              listen: false,
+            );
             /* final locationCtrl =
                 Provider.of<LocationProvider>(context, listen: false); */
 
-            final review =
-                Provider.of<MyReviewProvider>(context, listen: false);
+            final review = Provider.of<MyReviewProvider>(
+              context,
+              listen: false,
+            );
 
-            final notifyCtrl =
-                Provider.of<NotificationProvider>(context, listen: false);
+            final notifyCtrl = Provider.of<NotificationProvider>(
+              context,
+              listen: false,
+            );
             /*  await locationCtrl.getZoneId(); */
             dashCtrl.getBookingHistory(context);
             // favCtrl.getFavourite();
@@ -436,8 +530,10 @@ class NewLocationProvider with ChangeNotifier {
             notifyCtrl.getNotificationList(context);
             String? token = pref?.getString(session.accessToken);
             log("TOKEN :%sss$token");
-            final commonApi =
-                Provider.of<CommonApiProvider>(context, listen: false);
+            final commonApi = Provider.of<CommonApiProvider>(
+              context,
+              listen: false,
+            );
             await commonApi.selfApi(context);
 
             commonApi.getDashboardHome(context);
@@ -450,7 +546,9 @@ class NewLocationProvider with ChangeNotifier {
             if (pref!.getString(session.booking) != null) {
               //
               route.pushReplacementNamed(
-                  context, routeName.servicesDetailsScreen);
+                context,
+                routeName.servicesDetailsScreen,
+              );
               /*  bookingCtrl.getBookingDetails(context); */
             } else {
               route.pushReplacementNamed(context, routeName.dashboard);
@@ -460,8 +558,10 @@ class NewLocationProvider with ChangeNotifier {
             // log("message=============> $userData");
             if (userData != null) {
               log("message=============> $userData");
-              final locationCtrl =
-                  Provider.of<LocationProvider>(context, listen: false);
+              final locationCtrl = Provider.of<LocationProvider>(
+                context,
+                listen: false,
+              );
               /*locationCtrl.getUserCurrentLocation(context);*/
               await locationCtrl.getLocationList(context);
               await locationCtrl.getCountryState();
@@ -471,8 +571,10 @@ class NewLocationProvider with ChangeNotifier {
               //   dashCtrl.getJobRequest();
               // });
               if (context.mounted) {
-                final cartCtrl =
-                    Provider.of<CartProvider>(context, listen: false);
+                final cartCtrl = Provider.of<CartProvider>(
+                  context,
+                  listen: false,
+                );
                 cartCtrl.onReady(context);
               }
               pref!.remove(session.isContinueAsGuest);
@@ -528,7 +630,9 @@ class NewLocationProvider with ChangeNotifier {
             log("VVVV : ${value.isSuccess}");
             notifyListeners();
             Fluttertoast.showToast(
-                backgroundColor: appColor(context).red, msg: value.message);
+              backgroundColor: appColor(context).red,
+              msg: value.message,
+            );
           }
         }
       });
@@ -561,7 +665,7 @@ class NewLocationProvider with ChangeNotifier {
       "alternative_name": nameCtrl.text,
       "alternative_phone": numberCtrl.text,
       "code": dialCode.toString() ?? '',
-      "is_primary": isCheck ? true : false
+      "is_primary": isCheck ? true : false,
     };
     log("ADDRESS ED :${"${api.address}/${address!.id}"}");
     log("body : $body");
@@ -569,21 +673,23 @@ class NewLocationProvider with ChangeNotifier {
       await apiServices
           .putApi("${api.address}/${address!.id}", body, isToken: true)
           .then((value) {
-        hideLoading(context);
-        log("VVVV : ${value.isSuccess}");
-        notifyListeners();
-        if (value.isSuccess!) {
-          isLoading = false;
-          notifyListeners();
-          route.pop(context);
-          route.pop(context);
-        } else {
-          isLoading = false;
-          notifyListeners();
-          Fluttertoast.showToast(
-              backgroundColor: appColor(context).red, msg: value.message);
-        }
-      });
+            hideLoading(context);
+            log("VVVV : ${value.isSuccess}");
+            notifyListeners();
+            if (value.isSuccess!) {
+              isLoading = false;
+              notifyListeners();
+              route.pop(context);
+              route.pop(context);
+            } else {
+              isLoading = false;
+              notifyListeners();
+              Fluttertoast.showToast(
+                backgroundColor: appColor(context).red,
+                msg: value.message,
+              );
+            }
+          });
     } catch (e) {
       isLoading = false;
       notifyListeners();

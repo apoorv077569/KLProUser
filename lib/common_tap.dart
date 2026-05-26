@@ -132,12 +132,26 @@ wpTap(BuildContext context, String? phoneNumber) {
 }
 
 showBookingStatus(context, BookingModel? bookingModel) {
-  showModalBottomSheet(
-      isScrollControlled: true,
-      context: context,
-      builder: (context) {
-        return BookingStatusDialog(
-          bookingModel: bookingModel,
-        );
-      });
+ debugPrint(
+    "APPU_DEBUG BOTTOM SHEET DISABLED");
+
+Services? service;
+route.pushReplacementNamed(
+
+  context,
+
+  routeName.pendingBookingScreen,
+
+  args: {
+    "booking": BookingModel(
+      id: 1,
+      address: null,
+      service: service,
+      serviceId: service?.id,
+      providerId: service?.userId,
+    )
+  },
+);
+
+return;
 }

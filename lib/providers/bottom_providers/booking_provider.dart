@@ -3,6 +3,7 @@
 import 'dart:developer';
 
 import 'package:klpro_user/config.dart';
+import 'package:klpro_user/screens/app_pages_screens/slot_booking_screen/layouts/custom_date_bottom_sheet.dart';
 import 'package:klpro_user/screens/app_pages_screens/slot_booking_screen/layouts/year_dialog.dart';
 import 'package:klpro_user/utils/date_time_picker.dart';
 import 'package:intl/intl.dart';
@@ -397,12 +398,7 @@ class BookingProvider with ChangeNotifier {
         isScrollControlled: true,
         context: context,
         builder: (BuildContext context3) {
-          return DateTimePicker(
-            isWeek: false,
-            isService: false,
-            isEdit: true,
-            service: bookingModel!.service,
-          );
+          return CustomDateBottomSheet();
         }).then((value) {
       log("value:$value");
       updateStatus(context, bookingModel!.id, value);

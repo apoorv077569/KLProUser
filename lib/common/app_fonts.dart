@@ -1,7 +1,7 @@
 import 'package:klpro_user/config.dart';
 
 class AppFonts {
-  final fixit = "KLPro Company";
+  final fixit = "KLPro \nCompany";
   final skip = "skip";
   final welcomeToJust = "welcomeToJust";
   final findYour = "findYour";

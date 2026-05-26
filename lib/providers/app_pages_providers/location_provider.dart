@@ -66,11 +66,15 @@ class LocationProvider with ChangeNotifier {
   void listen() {
     if (scrollController.position.pixels >= 100) {
       hide();
-      log("scrollController.position.pixels${scrollController.position.pixels}");
+      log(
+        "scrollController.position.pixels${scrollController.position.pixels}",
+      );
       notifyListeners();
     } else {
       show();
-      log("scrollController.position.pixels${scrollController.position.pixels}");
+      log(
+        "scrollController.position.pixels${scrollController.position.pixels}",
+      );
       notifyListeners();
     }
 
@@ -104,7 +108,9 @@ class LocationProvider with ChangeNotifier {
 
   onAnimate(TickerProvider sync) async {
     animationController = AnimationController(
-        vsync: sync, duration: const Duration(milliseconds: 1200));
+      vsync: sync,
+      duration: const Duration(milliseconds: 1200),
+    );
     _runAnimation();
     notifyListeners();
   }
@@ -123,23 +129,39 @@ class LocationProvider with ChangeNotifier {
 
   // created method for getting user current location
   Future getUserCurrentLocation(context, {isRoute = false}) async {
-    Geolocator.requestPermission().then((value) async {
-      position1 = await Geolocator.getCurrentPosition(
-          locationSettings:
-              const LocationSettings(accuracy: LocationAccuracy.high));
+    Geolocator.requestPermission()
+        .then((value) async {
+          position1 = await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+            ),
+          );
 
-      position = LatLng(position1!.latitude, position1!.longitude);
-      notifyListeners();
-      getAddressFromLatLng(context);
-      getZoneId(context);
-      if (isRoute) {
-        route.pushNamed(context, routeName.currentLocation);
-      }
-      log("POS :$position");
-    }).onError((error, stackTrace) async {
-      await Geolocator.requestPermission();
-      log("ERROR $error");
-    });
+          position = LatLng(position1!.latitude, position1!.longitude);
+
+          notifyListeners();
+
+          getAddressFromLatLng(context);
+
+          getZoneId(context);
+
+          /// SAFE ROUTE CHECK
+
+          if (isRoute == true &&
+              ModalRoute.of(context)?.settings.name !=
+                  routeName.currentLocation) {
+            debugPrint("APPU_DEBUG OPENING MAP SCREEN");
+
+            route.pushNamed(context, routeName.currentLocation);
+          }
+
+          log("POS :$position");
+        })
+        .onError((error, stackTrace) async {
+          await Geolocator.requestPermission();
+
+          log("ERROR $error");
+        });
   }
 
   fetchCurrent(context) async {
@@ -151,71 +173,96 @@ class LocationProvider with ChangeNotifier {
 
   Future<Uint8List> getBytesFromAsset(String path, int width) async {
     ByteData data = await rootBundle.load(path);
-    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(),
-        targetWidth: width);
+    ui.Codec codec = await ui.instantiateImageCodec(
+      data.buffer.asUint8List(),
+      targetWidth: width,
+    );
     ui.FrameInfo fi = await codec.getNextFrame();
-    return (await fi.image.toByteData(format: ui.ImageByteFormat.png))!
-        .buffer
-        .asUint8List();
+    return (await fi.image.toByteData(
+      format: ui.ImageByteFormat.png,
+    ))!.buffer.asUint8List();
   }
 
   getAddressFromLatLng(context) async {
     await placemarkFromCoordinates(
-            newLat ?? position!.latitude, newLog ?? position!.longitude)
+          newLat ?? position!.latitude,
+          newLog ?? position!.longitude,
+        )
         .then((List<Placemark> placeMarks) async {
-      //  log("placeMarks :$placeMarks");
-      place = placeMarks[0];
-      markers = {};
-      final Uint8List markerIcon =
-          await getBytesFromAsset(eImageAssets.pin, 50);
-      currentAddress = '${place!.name}';
-      street = '${place!.street}';
-      // log("currentAddresscurrentAddress:$currentAddress");
+          //  log("placeMarks :$placeMarks");
+          place = placeMarks[0];
+          markers = {};
+          final Uint8List markerIcon = await getBytesFromAsset(
+            eImageAssets.pin,
+            50,
+          );
+          currentAddress = '${place!.name}';
+          street = '${place!.street}';
+          // log("currentAddresscurrentAddress:$currentAddress");
 
-      if (place!.name == place!.street) {
-        street =
-            '${place!.name}, ${place!.subLocality}, ${place!.locality}, ${place!.postalCode}';
-      } else {
-        street =
-            '${place!.name}, ${place!.street}, ${place!.subLocality}, ${place!.locality}, ${place!.postalCode}';
-      }
-      markers.add(Marker(
-        draggable: true,
-        onDrag: (value) {
-          mapController!.animateCamera(
-              CameraUpdate.newLatLng(LatLng(value.latitude, value.longitude)));
-          notifyListeners();
-        },
-        onDragEnd: (value) {
-          newLat = value.latitude;
-          newLog = value.longitude;
-          position = LatLng(value.latitude, value.longitude);
-          if (newLat != null && newLog != null) {
-            getAddressFromLatLng(context);
+          if (place!.name == place!.street) {
+            street =
+                '${place!.name}, ${place!.subLocality}, ${place!.locality}, ${place!.postalCode}';
+          } else {
+            street =
+                '${place!.name}, ${place!.street}, ${place!.subLocality}, ${place!.locality}, ${place!.postalCode}';
+          }
+          markers.add(
+            Marker(
+              draggable: true,
+              onDrag: (value) {
+                mapController!.animateCamera(
+                  CameraUpdate.newLatLng(
+                    LatLng(value.latitude, value.longitude),
+                  ),
+                );
+                notifyListeners();
+              },
+              onDragEnd: (value) {
+                newLat = value.latitude;
+                newLog = value.longitude;
+                position = LatLng(value.latitude, value.longitude);
+                if (newLat != null && newLog != null) {
+                  getAddressFromLatLng(context);
+                }
+                notifyListeners();
+              },
+              markerId: MarkerId(
+                LatLng(
+                  newLat ?? position!.latitude,
+                  newLog ?? position!.longitude,
+                ).toString(),
+              ),
+              position: LatLng(
+                newLat ?? position!.latitude,
+                newLog ?? position!.longitude,
+              ),
+              infoWindow: InfoWindow(
+                title: place!.name,
+                snippet: place!.subLocality,
+              ),
+              icon: BitmapDescriptor.bytes(markerIcon),
+            ),
+          );
+          if (mapController != null) {
+            mapController!.animateCamera(
+              CameraUpdate.newLatLng(
+                LatLng(position!.latitude, position!.longitude),
+              ),
+            );
           }
           notifyListeners();
-        },
-        markerId: MarkerId(
-            LatLng(newLat ?? position!.latitude, newLog ?? position!.longitude)
-                .toString()),
-        position:
-            LatLng(newLat ?? position!.latitude, newLog ?? position!.longitude),
-        infoWindow: InfoWindow(title: place!.name, snippet: place!.subLocality),
-        icon: BitmapDescriptor.bytes(markerIcon),
-      ));
-      if (mapController != null) {
-        mapController!.animateCamera(CameraUpdate.newLatLng(
-            LatLng(position!.latitude, position!.longitude)));
-      }
-      notifyListeners();
-      log("NEW : ${position!.latitude}/ ${position!.longitude}");
-      getZoneId(context,
-          lat: (newLat ?? position!.latitude).toString(),
-          lan: (newLog ?? position!.longitude).toString(),
-          isLocation: true);
-    }).catchError((e) {
-      debugPrint("ee : $e");
-    });
+          log("NEW : ${position!.latitude}/ ${position!.longitude}");
+          getZoneId(
+            context,
+            lat: (newLat ?? position!.latitude).toString(),
+            lan: (newLog ?? position!.longitude).toString(),
+            isLocation: true,
+          );
+        })
+        .catchError((e) {
+          debugPrint("ee : $e");
+        });
   }
 
   bool isAddLoading = false;
@@ -261,11 +308,13 @@ class LocationProvider with ChangeNotifier {
       primaryAddress = index;
       setPrimaryAddress = index;
       userPrimaryAddress = addressList[primaryAddress];
-      String area = addressList[primaryAddress].area != null &&
+      String area =
+          addressList[primaryAddress].area != null &&
               addressList[primaryAddress].area!.isNotEmpty
           ? "${addressList[primaryAddress].area}, "
           : "";
-      String city = addressList[primaryAddress].city != null &&
+      String city =
+          addressList[primaryAddress].city != null &&
               addressList[primaryAddress].city!.isNotEmpty
           ? "${addressList[primaryAddress].city}"
           : "";
@@ -286,25 +335,33 @@ class LocationProvider with ChangeNotifier {
 
     if (index >= 0) {
       if (addressList[primaryAddress].latitude != null) {
-        position = LatLng(double.parse(addressList[primaryAddress].latitude!),
-            double.parse(addressList[primaryAddress].longitude!));
+        position = LatLng(
+          double.parse(addressList[primaryAddress].latitude!),
+          double.parse(addressList[primaryAddress].longitude!),
+        );
         notifyListeners();
       }
       //getAddressFromLatLng(context);
     } else {}
   }
 
-//zone id
+  //zone id
 
-  Future<void> getZoneId(context,
-      {String? lat, String? lan, bool isLocation = false}) async {
+  Future<void> getZoneId(
+    context, {
+    String? lat,
+    String? lan,
+    bool isLocation = false,
+  }) async {
     try {
       String finalLat = lat ?? "";
       String finalLng = lan ?? "";
 
       bool testerMode = await isTesterMode();
       if (testerMode && lat == null && lan == null) {
-        log("Tester Mode Detected and no coordinates passed! Using Noida coordinates.");
+        log(
+          "Tester Mode Detected and no coordinates passed! Using Noida coordinates.",
+        );
         finalLat = "28.5583";
         finalLng = "77.3375";
       } else if (lat == null || lan == null) {
@@ -332,8 +389,10 @@ class LocationProvider with ChangeNotifier {
 
         // Get position only if we have permission
         Position position = await Geolocator.getCurrentPosition(
-            locationSettings:
-                const LocationSettings(accuracy: LocationAccuracy.high));
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+          ),
+        );
         finalLat = position.latitude.toString();
         finalLng = position.longitude.toString();
       }
@@ -361,7 +420,9 @@ class LocationProvider with ChangeNotifier {
           // Fallback if not success
           if (zoneIds.isEmpty) {
             bool testerMode = await isTesterMode();
-            zoneIds = testerMode ? "10" : "1"; // Default fallback (Zone 10 for testers)
+            zoneIds = testerMode
+                ? "10"
+                : "1"; // Default fallback (Zone 10 for testers)
             SharedPreferences pref = await SharedPreferences.getInstance();
             pref.setString(session.zoneIds, zoneIds);
           }
@@ -380,51 +441,53 @@ class LocationProvider with ChangeNotifier {
     }
   }
 
-//   Future<void> getZoneId(
-//       {String? lat, String? lan, bool isLocation = false}) async {
-//     Position position = await Geolocator.getCurrentPosition(
-//         locationSettings:
-//             const LocationSettings(accuracy: LocationAccuracy.high));
-//     log("position getZoneId:$position");
-//     try {
-//       await apiServices.getApi(
-//           isLocation == true
-//               ? "${api.zoneByPoint}?lat=${lat /* position.latitude */}&lng=${lan /* position.longitude */}"
-//               : "${api.zoneByPoint}?lat=${position.latitude}&lng=${position.longitude}",
-//           []).then((value) async {
-//         log("CALUE :${value.data}");
-//         if (value.isSuccess!) {
-//           List o = value.data;
-//           String idsString = o.map((obj) => obj['id'].toString()).join(',');
-//           for (var data in value.data) {
-//             currentZoneModel.add(Datum1.fromJson(data));
-//             notifyListeners();
-//           }
-//           zoneIds = idsString;
-//           log("string :$idsString");
-//           SharedPreferences pref = await SharedPreferences.getInstance();
-//           pref.setString(session.zoneIds, idsString);
-//           log("message=-=-=-=-=-=-=-===-=====-=-- IsZone UPDATE DONE ${value.data}");
-//           notifyListeners();
-//         }
-//         notifyListeners();
-//       });
-//     } catch (e, s) {
-//       log("EEEE getZoneId :: $e====> $s");
-//       notifyListeners();
-//     }
-//   }
+  //   Future<void> getZoneId(
+  //       {String? lat, String? lan, bool isLocation = false}) async {
+  //     Position position = await Geolocator.getCurrentPosition(
+  //         locationSettings:
+  //             const LocationSettings(accuracy: LocationAccuracy.high));
+  //     log("position getZoneId:$position");
+  //     try {
+  //       await apiServices.getApi(
+  //           isLocation == true
+  //               ? "${api.zoneByPoint}?lat=${lat /* position.latitude */}&lng=${lan /* position.longitude */}"
+  //               : "${api.zoneByPoint}?lat=${position.latitude}&lng=${position.longitude}",
+  //           []).then((value) async {
+  //         log("CALUE :${value.data}");
+  //         if (value.isSuccess!) {
+  //           List o = value.data;
+  //           String idsString = o.map((obj) => obj['id'].toString()).join(',');
+  //           for (var data in value.data) {
+  //             currentZoneModel.add(Datum1.fromJson(data));
+  //             notifyListeners();
+  //           }
+  //           zoneIds = idsString;
+  //           log("string :$idsString");
+  //           SharedPreferences pref = await SharedPreferences.getInstance();
+  //           pref.setString(session.zoneIds, idsString);
+  //           log("message=-=-=-=-=-=-=-===-=====-=-- IsZone UPDATE DONE ${value.data}");
+  //           notifyListeners();
+  //         }
+  //         notifyListeners();
+  //       });
+  //     } catch (e, s) {
+  //       log("EEEE getZoneId :: $e====> $s");
+  //       notifyListeners();
+  //     }
+  //   }
 
   setDefault(context) {
     primaryAddress = selectedIndex!;
     log("primaryAddress :$primaryAddress");
     log("primaryAddress :${addressList[primaryAddress].address}");
     userPrimaryAddress = addressList[primaryAddress];
-    String area = addressList[primaryAddress].area != null &&
+    String area =
+        addressList[primaryAddress].area != null &&
             addressList[primaryAddress].area!.isNotEmpty
         ? "${addressList[primaryAddress].area}, "
         : "";
-    String city = addressList[primaryAddress].city != null &&
+    String city =
+        addressList[primaryAddress].city != null &&
             addressList[primaryAddress].city!.isNotEmpty
         ? "${addressList[primaryAddress].city}"
         : "";
@@ -436,16 +499,20 @@ class LocationProvider with ChangeNotifier {
     notifyListeners();
     setAddressPrimary(context, userPrimaryAddress!.id);
     if (addressList[primaryAddress].latitude != null) {
-      position = LatLng(double.parse(addressList[primaryAddress].latitude!),
-          double.parse(addressList[primaryAddress].longitude!));
+      position = LatLng(
+        double.parse(addressList[primaryAddress].latitude!),
+        double.parse(addressList[primaryAddress].longitude!),
+      );
     }
     notifyListeners();
     //getAddressFromLatLng();
     route.pop(context);
-    getZoneId(context,
-        lat: addressList[primaryAddress].latitude,
-        lan: addressList[primaryAddress].longitude,
-        isLocation: true);
+    getZoneId(
+      context,
+      lat: addressList[primaryAddress].latitude,
+      lan: addressList[primaryAddress].longitude,
+      isLocation: true,
+    );
   }
 
   //set primary address
@@ -454,10 +521,10 @@ class LocationProvider with ChangeNotifier {
       await apiServices
           .putApi("${api.setAddressPrimary}/$id", [], isToken: true)
           .then((value) {
-        log("setAddressPrimary : ${value.isSuccess}");
-        notifyListeners();
-        if (value.isSuccess!) {}
-      });
+            log("setAddressPrimary : ${value.isSuccess}");
+            notifyListeners();
+            if (value.isSuccess!) {}
+          });
     } catch (e) {
       log("CATCH setAddressPrimary: $e");
     }
@@ -465,29 +532,41 @@ class LocationProvider with ChangeNotifier {
 
   // country state list
   Future<void> getCountryState() async {
-    countryStateList = [];
+    debugPrint("APPU_DEBUG DUMMY COUNTRY STATE LOADED");
 
-    try {
-      await apiServices.getApi(api.country, []).then((value) {
-        if (value.isSuccess!) {
-          List co = value.data;
-          // log("COUNRY :${co.length}");
-          for (var data in value.data) {
-            if (!countryStateList.contains(CountryStateModel.fromJson(data))) {
-              countryStateList.add(CountryStateModel.fromJson(data));
-            }
-            notifyListeners();
-          }
+    countryStateList = [
+      CountryStateModel(
+        id: 1,
+        name: "India",
+        state: [
+          StateModel(id: 1, name: "Uttar Pradesh"),
 
-          stateList = countryStateList[0].state!;
-          // log("stateList:${stateList}");
-          notifyListeners();
-        }
-      });
-    } catch (e) {
-      log("ERRROEEE getCountryState $e");
-      notifyListeners();
-    }
+          StateModel(id: 2, name: "Delhi"),
+
+          StateModel(id: 3, name: "Maharashtra"),
+        ],
+      ),
+
+      CountryStateModel(
+        id: 2,
+        name: "United States",
+        state: [
+          StateModel(id: 4, name: "California"),
+
+          StateModel(id: 5, name: "Texas"),
+        ],
+      ),
+    ];
+
+    /// DEFAULT STATE LIST
+
+    stateList = countryStateList.first.state ?? [];
+
+    debugPrint("APPU_DEBUG COUNTRY COUNT => ${countryStateList.length}");
+
+    debugPrint("APPU_DEBUG STATE COUNT => ${stateList.length}");
+
+    notifyListeners();
   }
 
   //delete Address
@@ -496,21 +575,21 @@ class LocationProvider with ChangeNotifier {
     route.pop(context);
     log("ADDRESS ID : ${api.address}/$id");
     try {
-      await apiServices
-          .deleteApi("${api.address}/$id", {}, isToken: true)
-          .then((value) {
-        hideLoading(context);
-        log("VVVV : ${value.isSuccess}");
-        notifyListeners();
-        if (value.isSuccess!) {
-          completeSuccess(context, isBack);
-          getLocationList(context);
-        } else {
-          log("message====${value.message}");
-          // Fluttertoast.showToast(
-          //     msg: value.message, backgroundColor: appColor(context).red);
-        }
-      });
+      await apiServices.deleteApi("${api.address}/$id", {}, isToken: true).then(
+        (value) {
+          hideLoading(context);
+          log("VVVV : ${value.isSuccess}");
+          notifyListeners();
+          if (value.isSuccess!) {
+            completeSuccess(context, isBack);
+            getLocationList(context);
+          } else {
+            log("message====${value.message}");
+            // Fluttertoast.showToast(
+            //     msg: value.message, backgroundColor: appColor(context).red);
+          }
+        },
+      );
     } catch (e) {
       hideLoading(context);
       notifyListeners();
@@ -521,115 +600,168 @@ class LocationProvider with ChangeNotifier {
   deleteAccountConfirmation(context, sync, id, {isBack = false}) {
     animateDesign(sync);
     showDialog(
-        context: context,
-        builder: (context1) {
-          return StatefulBuilder(builder: (context2, setState) {
+      context: context,
+      builder: (context1) {
+        return StatefulBuilder(
+          builder: (context2, setState) {
             return Consumer<LocationProvider>(
-                builder: (context3, value, child) {
-              return AlertDialog(
+              builder: (context3, value, child) {
+                return AlertDialog(
                   contentPadding: EdgeInsets.zero,
-                  insetPadding:
-                      const EdgeInsets.symmetric(horizontal: Insets.i20),
+                  insetPadding: const EdgeInsets.symmetric(
+                    horizontal: Insets.i20,
+                  ),
                   shape: const SmoothRectangleBorder(
-                      borderRadius: SmoothBorderRadius.all(SmoothRadius(
-                          cornerRadius: AppRadius.r14, cornerSmoothing: 1))),
+                    borderRadius: SmoothBorderRadius.all(
+                      SmoothRadius(
+                        cornerRadius: AppRadius.r14,
+                        cornerSmoothing: 1,
+                      ),
+                    ),
+                  ),
                   backgroundColor: appColor(context).whiteBg,
-                  content: Stack(alignment: Alignment.topRight, children: [
-                    Column(mainAxisSize: MainAxisSize.min, children: [
-                      // Gif
-                      Stack(alignment: Alignment.topCenter, children: [
-                        Stack(alignment: Alignment.topCenter, children: [
-                          SizedBox(
-                                  width: MediaQuery.of(context).size.width,
-                                  child: Stack(
+                  content: Stack(
+                    alignment: Alignment.topRight,
+                    children: [
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Gif
+                          Stack(
+                            alignment: Alignment.topCenter,
+                            children: [
+                              Stack(
+                                alignment: Alignment.topCenter,
+                                children: [
+                                  SizedBox(
+                                    width: MediaQuery.of(context).size.width,
+                                    child: Stack(
                                       alignment: Alignment.bottomCenter,
                                       children: [
                                         SizedBox(
-                                            height: Sizes.s180,
-                                            width: Sizes.s150,
+                                          height: Sizes.s180,
+                                          width: Sizes.s150,
+                                          child: AnimatedContainer(
+                                            duration: const Duration(
+                                              milliseconds: 200,
+                                            ),
+                                            curve: isPositionedRight
+                                                ? Curves.bounceIn
+                                                : Curves.bounceOut,
+                                            alignment: isPositionedRight
+                                                ? Alignment.center
+                                                : Alignment.topCenter,
                                             child: AnimatedContainer(
-                                                duration: const Duration(
-                                                    milliseconds: 200),
-                                                curve: isPositionedRight
-                                                    ? Curves.bounceIn
-                                                    : Curves.bounceOut,
-                                                alignment: isPositionedRight
-                                                    ? Alignment.center
-                                                    : Alignment.topCenter,
-                                                child: AnimatedContainer(
-                                                    duration: const Duration(
-                                                        milliseconds: 200),
-                                                    height: 40,
-                                                    child: Image.asset(
-                                                        eImageAssets
-                                                            .locationColor)))),
-                                        Image.asset(eImageAssets.dustbin,
-                                                height: Sizes.s88,
-                                                width: Sizes.s88)
-                                            .paddingOnly(bottom: Insets.i24)
-                                      ]))
-                              .decorated(
-                                  color: appColor(context).fieldCardBg,
-                                  borderRadius:
-                                      BorderRadius.circular(AppRadius.r10)),
-                        ]),
-                        if (offsetAnimation != null)
-                          SlideTransition(
-                              position: offsetAnimation!,
-                              child: (offsetAnimation != null &&
-                                      isAnimateOver == true)
-                                  ? Image.asset(eImageAssets.dustbinCover,
-                                      height: 38)
-                                  : const SizedBox())
-                      ]),
-                      // Sub text
-                      const VSpace(Sizes.s15),
-                      Text(
-                          language(context,
-                              translations!.deleteLocationSuccessfully),
-                          textAlign: TextAlign.center,
-                          style: appCss.dmDenseRegular14
-                              .textColor(appColor(context).lightText)
-                              .textHeight(1.2)),
-                      const VSpace(Sizes.s20),
-                      Row(children: [
-                        Expanded(
-                            child: ButtonCommon(
-                                onTap: () => route.pop(context),
-                                title: translations!.no ?? appFonts.no,
-                                borderColor: appColor(context).primary,
-                                color: appColor(context).whiteBg,
-                                style: appCss.dmDenseSemiBold16
-                                    .textColor(appColor(context).primary))),
-                        const HSpace(Sizes.s15),
-                        Expanded(
-                            child: ButtonCommon(
-                                title: translations!.yes ?? appFonts.yes,
-                                color: appColor(context).primary,
-                                onTap: () => deleteAddress(context, id),
-                                style: appCss.dmDenseSemiBold16
-                                    .textColor(appColor(context).whiteColor)))
-                      ])
-                    ]).padding(
+                                              duration: const Duration(
+                                                milliseconds: 200,
+                                              ),
+                                              height: 40,
+                                              child: Image.asset(
+                                                eImageAssets.locationColor,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        Image.asset(
+                                          eImageAssets.dustbin,
+                                          height: Sizes.s88,
+                                          width: Sizes.s88,
+                                        ).paddingOnly(bottom: Insets.i24),
+                                      ],
+                                    ),
+                                  ).decorated(
+                                    color: appColor(context).fieldCardBg,
+                                    borderRadius: BorderRadius.circular(
+                                      AppRadius.r10,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (offsetAnimation != null)
+                                SlideTransition(
+                                  position: offsetAnimation!,
+                                  child:
+                                      (offsetAnimation != null &&
+                                          isAnimateOver == true)
+                                      ? Image.asset(
+                                          eImageAssets.dustbinCover,
+                                          height: 38,
+                                        )
+                                      : const SizedBox(),
+                                ),
+                            ],
+                          ),
+                          // Sub text
+                          const VSpace(Sizes.s15),
+                          Text(
+                            language(
+                              context,
+                              translations!.deleteLocationSuccessfully,
+                            ),
+                            textAlign: TextAlign.center,
+                            style: appCss.dmDenseRegular14
+                                .textColor(appColor(context).lightText)
+                                .textHeight(1.2),
+                          ),
+                          const VSpace(Sizes.s20),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ButtonCommon(
+                                  onTap: () => route.pop(context),
+                                  title: translations!.no ?? appFonts.no,
+                                  borderColor: appColor(context).primary,
+                                  color: appColor(context).whiteBg,
+                                  style: appCss.dmDenseSemiBold16.textColor(
+                                    appColor(context).primary,
+                                  ),
+                                ),
+                              ),
+                              const HSpace(Sizes.s15),
+                              Expanded(
+                                child: ButtonCommon(
+                                  title: translations!.yes ?? appFonts.yes,
+                                  color: appColor(context).primary,
+                                  onTap: () => deleteAddress(context, id),
+                                  style: appCss.dmDenseSemiBold16.textColor(
+                                    appColor(context).whiteColor,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ).padding(
                         horizontal: Insets.i20,
                         top: Insets.i60,
-                        bottom: Insets.i20),
-                    Row(
+                        bottom: Insets.i20,
+                      ),
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           // Title
-                          Text(language(context, translations!.deleteLocation),
-                              style: appCss.dmDenseExtraBold18
-                                  .textColor(appColor(context).darkText)),
-                          Icon(CupertinoIcons.multiply,
-                                  size: Sizes.s20,
-                                  color: appColor(context).darkText)
-                              .inkWell(onTap: () => route.pop(context))
-                        ]).paddingAll(Insets.i20)
-                  ]));
-            });
-          });
-        }).then((value) {
+                          Text(
+                            language(context, translations!.deleteLocation),
+                            style: appCss.dmDenseExtraBold18.textColor(
+                              appColor(context).darkText,
+                            ),
+                          ),
+                          Icon(
+                            CupertinoIcons.multiply,
+                            size: Sizes.s20,
+                            color: appColor(context).darkText,
+                          ).inkWell(onTap: () => route.pop(context)),
+                        ],
+                      ).paddingAll(Insets.i20),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    ).then((value) {
       isPositionedRight = false;
       isAnimateOver = false;
       notifyListeners();
@@ -637,87 +769,137 @@ class LocationProvider with ChangeNotifier {
   }
 
   animateDesign(TickerProvider sync) {
-    Future.delayed(DurationClass.s1).then((value) {
-      isPositionedRight = true;
-      notifyListeners();
-    }).then((value) {
-      Future.delayed(DurationClass.ms150).then((value) {
-        isAnimateOver = true;
-        notifyListeners();
-      }).then((value) {
-        controller = AnimationController(
-            vsync: sync, duration: const Duration(seconds: 2))
-          ..forward();
-        offsetAnimation = Tween<Offset>(
-                begin: const Offset(0, 0.5), end: const Offset(0, 0.88))
-            .animate(
-                CurvedAnimation(parent: controller!, curve: Curves.elasticOut));
-        notifyListeners();
-      });
-    });
+    Future.delayed(DurationClass.s1)
+        .then((value) {
+          isPositionedRight = true;
+          notifyListeners();
+        })
+        .then((value) {
+          Future.delayed(DurationClass.ms150)
+              .then((value) {
+                isAnimateOver = true;
+                notifyListeners();
+              })
+              .then((value) {
+                controller = AnimationController(
+                  vsync: sync,
+                  duration: const Duration(seconds: 2),
+                )..forward();
+                offsetAnimation =
+                    Tween<Offset>(
+                      begin: const Offset(0, 0.5),
+                      end: const Offset(0, 0.88),
+                    ).animate(
+                      CurvedAnimation(
+                        parent: controller!,
+                        curve: Curves.elasticOut,
+                      ),
+                    );
+                notifyListeners();
+              });
+        });
 
     notifyListeners();
   }
 
-  onLocationInit(context) async {
-    argumentData = null;
-    log("CALL :: $count");
+ onLocationInit(context) async {
 
-    PermissionStatus status = await Permission.locationWhenInUse.status;
-    log("Location Permission Status: ${status.isGranted}");
+  argumentData = null;
 
-    if (status.isPermanentlyDenied) {
-      log("Permission Permanently Denied - Opening App Settings...");
-      await openAppSettings();
-      return;
-    }
+  log("CALL :: $count");
 
-    if (status.isDenied) {
-      log("Permission Denied - Requesting Again...");
-      PermissionStatus requestStatus =
-          await Permission.locationWhenInUse.request();
+  PermissionStatus status =
+      await Permission.locationWhenInUse.status;
 
-      if (requestStatus.isDenied || requestStatus.isPermanentlyDenied) {
-        log("Permission still denied after request.");
-        return;
-      }
-    }
+  log(
+    "Location Permission Status: ${status.isGranted}",
+  );
 
-    notifyListeners();
+  if (status.isPermanentlyDenied) {
 
-    scrollController.addListener(listen);
-    position = null;
-    count++;
-    notifyListeners();
+    log(
+      "Permission Permanently Denied - Opening App Settings...",
+    );
 
-    argumentData = ModalRoute.of(context)!.settings.arguments;
-    currentAddress = "";
+    await openAppSettings();
 
-    if (argumentData != null) {
-      var arg = argumentData['data'];
-      isEdit = true;
-      address = arg;
+    return;
+  }
 
-      log("LAT : ${address!.latitude}// ${address!.longitude}");
+  if (status.isDenied) {
 
-      position = LatLng(
-        double.parse(address!.latitude!),
-        double.parse(address!.longitude!),
+    log("Permission Denied - Requesting Again...");
+
+    PermissionStatus requestStatus =
+        await Permission.locationWhenInUse
+            .request();
+
+    if (requestStatus.isDenied ||
+        requestStatus.isPermanentlyDenied) {
+
+      log(
+        "Permission still denied after request.",
       );
 
-      log("ARGH :$position");
-      notifyListeners();
-
-      getAddressFromLatLng(context);
-    } else {
-      log("ISSSS");
-      getUserCurrentLocation(context);
-      isEdit = false;
+      return;
     }
-
-    notifyListeners();
   }
 
+  notifyListeners();
+
+  scrollController.addListener(listen);
+
+  /// REMOVE THIS
+  /// position = null;
+
+  count++;
+
+  notifyListeners();
+
+  argumentData =
+      ModalRoute.of(context)!
+          .settings
+          .arguments;
+
+  currentAddress = "";
+
+  if (argumentData != null) {
+
+    var arg = argumentData['data'];
+
+    isEdit = true;
+
+    address = arg;
+
+    log(
+      "LAT : ${address!.latitude}// ${address!.longitude}",
+    );
+
+    position = LatLng(
+      double.parse(address!.latitude!),
+      double.parse(address!.longitude!),
+    );
+
+    log("ARGH :$position");
+
+    notifyListeners();
+
+    getAddressFromLatLng(context);
+
+  } else {
+
+    log("ISSSS");
+
+    /// SAFE CHECK
+    if (position == null) {
+      getUserCurrentLocation(context);
+    }
+
+    isEdit = false;
+  }
+
+  notifyListeners();
+}
   onReady(context) {
     dynamic arg = ModalRoute.of(context)!.settings.arguments ?? false;
     isButtonShow = arg;
@@ -731,23 +913,24 @@ class LocationProvider with ChangeNotifier {
 
   completeSuccess(context, isBack) {
     showCupertinoDialog(
-        context: context,
-        builder: (context1) {
-          return AlertDialogCommon(
-              title: translations!.successfullyDelete,
-              height: Sizes.s140,
-              image: eGifAssets.successGif,
-              subtext:
-                  language(context, translations!.locationDeletedSuccessfully),
-              bText1: language(context, translations!.okay),
-              b1OnTap: () {
-                if (isBack) {
-                  route.pop(context);
-                  route.pop(context);
-                } else {
-                  route.pop(context);
-                }
-              });
-        });
+      context: context,
+      builder: (context1) {
+        return AlertDialogCommon(
+          title: translations!.successfullyDelete,
+          height: Sizes.s140,
+          image: eGifAssets.successGif,
+          subtext: language(context, translations!.locationDeletedSuccessfully),
+          bText1: language(context, translations!.okay),
+          b1OnTap: () {
+            if (isBack) {
+              route.pop(context);
+              route.pop(context);
+            } else {
+              route.pop(context);
+            }
+          },
+        );
+      },
+    );
   }
 }

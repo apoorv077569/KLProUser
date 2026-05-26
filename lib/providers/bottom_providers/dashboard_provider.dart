@@ -39,47 +39,14 @@ class DashboardProvider with ChangeNotifier {
   bool isTap = false, isSearchData = false;
 
   void initDashboardData(BuildContext context) async {
-    final value = Provider.of<DashboardProvider>(context, listen: false);
-
-    // Provider.of<SearchProvider>(context, listen: false).getCategory();
-    Provider.of<CartProvider>(context, listen: false).onReady(context);
-    // final commonApi = Provider.of<CommonApiProvider>(context, listen: false);
-    /*  value.getServicePackage(); */
-    /* value.getCoupons(); */
-    /* value.getHighestRate(); */
-    /* value.getFeaturedPackage(1); */
-    value.getOffer();
-
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    log("preferences.getBool(session.isContinueAsGuest) == false::${preferences.getBool(session.isContinueAsGuest) == false}");
-    if (preferences.getBool(session.isContinueAsGuest) == false) {
-      await getJobRequest();
-      getBookingHistory(context);
-      // Provider.of<CategoriesDetailsProvider>(context, listen: false)
-      //     .fetchBannerAdsData(context);
-      // commonApi.selfApi(context);
-    }
-
-    var locationCtrl = Provider.of<LocationProvider>(context, listen: false);
-
-    Permission.location.serviceStatus.isEnabled.then((isEnabled) async {
-      if (isEnabled) {
-        locationCtrl.getUserCurrentLocation(context);
-        locationCtrl.getLocationList(context);
-      } else {
-        await Permission.location.request();
-      }
-    });
-
-    // Call booking after everything is ready
-    // bookingCtrl.onReady(context, value);
+    debugPrint("APPU_DEBUG DASHBOARD APIs DISABLED");
   }
 
   final List<Widget> pages = [
     const HomeScreen(),
     const BookingScreen(),
     const OfferScreen(),
-    const ProfileScreen()
+    const ProfileScreen(),
   ];
 
   List dashboardList(context) => [...appArray.dashboardList(context)];
@@ -102,8 +69,10 @@ class DashboardProvider with ChangeNotifier {
         if (!context.mounted) return;
         bool isGuest = preferences.getBool(session.isContinueAsGuest) ?? false;
         if (isGuest == false) {
-          final homeCtrl =
-              Provider.of<HomeScreenProvider>(context, listen: false);
+          final homeCtrl = Provider.of<HomeScreenProvider>(
+            context,
+            listen: false,
+          );
 
           homeCtrl.animationController!.reset();
           homeCtrl.notifyListeners();
@@ -112,8 +81,10 @@ class DashboardProvider with ChangeNotifier {
         }
       } else {
         if (context.mounted) {
-          final homeCtrl =
-              Provider.of<HomeScreenProvider>(context, listen: false);
+          final homeCtrl = Provider.of<HomeScreenProvider>(
+            context,
+            listen: false,
+          );
           homeCtrl.animationController?.reset();
           homeCtrl.notifyListeners();
         }
@@ -148,11 +119,13 @@ class DashboardProvider with ChangeNotifier {
       selectIndex = 0;
       notifyListeners();
       Fluttertoast.showToast(
-          msg: language(context, translations!.pressBackAgain));
+        msg: language(context, translations!.pressBackAgain),
+      );
     } else {
       if (backCounter == 0) {
         Fluttertoast.showToast(
-            msg: language(context, translations!.pressBackAgain));
+          msg: language(context, translations!.pressBackAgain),
+        );
         backCounter++;
         notifyListeners();
       } else {
@@ -166,8 +139,10 @@ class DashboardProvider with ChangeNotifier {
   onRefresh(context) async {
     final locationCtrl = Provider.of<LocationProvider>(context, listen: false);
     final splashCtrl = Provider.of<SplashProvider>(context, listen: false);
-    final categori =
-        Provider.of<CategoriesDetailsProvider>(context, listen: false);
+    final categori = Provider.of<CategoriesDetailsProvider>(
+      context,
+      listen: false,
+    );
 
     final common = Provider.of<CommonApiProvider>(context, listen: false);
     // await locationCtrl.getZoneId();
@@ -228,8 +203,9 @@ class DashboardProvider with ChangeNotifier {
   Future<void> getOffer() async {
     isLoading = true;
     try {
-      await apiServices
-          .getApi("${api.banner}?banner_type=true", []).then((value) {
+      await apiServices.getApi("${api.banner}?banner_type=true", []).then((
+        value,
+      ) {
         offerList = [];
         if (value.isSuccess!) {
           isLoading = false;
@@ -257,25 +233,25 @@ class DashboardProvider with ChangeNotifier {
       await apiServices
           .getApi(api.highestRating, [], isData: true, isMessage: true)
           .then((value) {
-        if (value.isSuccess!) {
-          isHidhestRate = false;
-          highestRateList = [];
-          firstTwoHighRateList = [];
-          // debugPrint("HIGHH :${value.data}");
-          for (var data in value.data['data']) {
-            highestRateList.add(ProviderModel.fromJson(data));
-            //debugPrint("highestRateList :$data");
-            notifyListeners();
-          }
+            if (value.isSuccess!) {
+              isHidhestRate = false;
+              highestRateList = [];
+              firstTwoHighRateList = [];
+              // debugPrint("HIGHH :${value.data}");
+              for (var data in value.data['data']) {
+                highestRateList.add(ProviderModel.fromJson(data));
+                //debugPrint("highestRateList :$data");
+                notifyListeners();
+              }
 
-          if (highestRateList.length >= 3) {
-            firstTwoHighRateList = highestRateList.getRange(0, 3).toList();
-          }
+              if (highestRateList.length >= 3) {
+                firstTwoHighRateList = highestRateList.getRange(0, 3).toList();
+              }
 
-          // debugPrint("firstTwoHighRateList :${firstTwoHighRateList.length}");
-          notifyListeners();
-        }
-      });
+              // debugPrint("firstTwoHighRateList :${firstTwoHighRateList.length}");
+              notifyListeners();
+            }
+          });
     } catch (e, s) {
       isHidhestRate = false;
       debugPrint("getHighestRate ::$e==> $s");
@@ -283,7 +259,7 @@ class DashboardProvider with ChangeNotifier {
     }
   }
 
-//currency list
+  //currency list
   Future getCurrency() async {
     try {
       await apiServices.getApi(api.currency, []).then((value) {
@@ -303,7 +279,7 @@ class DashboardProvider with ChangeNotifier {
     }
   }
 
-//coupons list
+  //coupons list
   bool isCoupons = false;
 
   getCoupons() async {
@@ -405,7 +381,8 @@ class DashboardProvider with ChangeNotifier {
           for (var data in service.reversed.toList()) {
             servicePackagesList.add(ServicePackageModel.fromJson(data));
             debugPrint(
-                "servicePackagesList LEN: ${servicePackagesList[0].title}");
+              "servicePackagesList LEN: ${servicePackagesList[0].title}",
+            );
             notifyListeners();
           }
           if (servicePackagesList.length >= 3) {
@@ -432,9 +409,9 @@ class DashboardProvider with ChangeNotifier {
       // } else {
       //   apiUrl = api.serviceRequest;
       // }
-      await apiServices
-          .getApi(api.serviceRequest, [], isToken: true)
-          .then((value) {
+      await apiServices.getApi(api.serviceRequest, [], isToken: true).then((
+        value,
+      ) {
         if (value.isSuccess!) {
           //   log("DATA JOB::${value.data}");
           List category = value.data;
@@ -469,7 +446,7 @@ class DashboardProvider with ChangeNotifier {
           isFeaturedServiceList = false;
           featuredServiceList = [];
           firstTwoFeaturedServiceList = [];
-          
+
           List service = [];
           if (value.data is List) {
             service = value.data;
@@ -477,15 +454,17 @@ class DashboardProvider with ChangeNotifier {
             service = value.data['data'];
           }
 
-          for (var data in service) { // Removed .reversed.toList() as pagination usually returns sorted
+          for (var data in service) {
+            // Removed .reversed.toList() as pagination usually returns sorted
             if (!featuredServiceList.contains(Services.fromJson(data))) {
               featuredServiceList.add(Services.fromJson(data));
             }
           }
           notifyListeners();
           if (featuredServiceList.length >= 2) {
-            firstTwoFeaturedServiceList =
-                featuredServiceList.getRange(0, 2).toList();
+            firstTwoFeaturedServiceList = featuredServiceList
+                .getRange(0, 2)
+                .toList();
           }
           notifyListeners();
         } else {
@@ -503,7 +482,7 @@ class DashboardProvider with ChangeNotifier {
   //blog list
   bool isBlogList = false;
 
-/*
+  /*
 final dio = Dio();
   getBlogDetails({dynamic id}) async {
     isBlogList = true;
@@ -605,7 +584,9 @@ final dio = Dio();
 
   onRemoveService(BuildContext context, int index) async {
     isAlert = false;
-    log("onRemoveService called for index: $index, featuredServiceList count: ${featuredServiceList[index].selectedRequiredServiceMan}, service ID: ${featuredServiceList[index].id}");
+    log(
+      "onRemoveService called for index: $index, featuredServiceList count: ${featuredServiceList[index].selectedRequiredServiceMan}, service ID: ${featuredServiceList[index].id}",
+    );
     int count = featuredServiceList[index].selectedRequiredServiceMan ?? 1;
     int minServicemen = featuredServiceList[index].requiredServicemen ?? 1;
     if (count <= minServicemen) {
@@ -621,14 +602,17 @@ final dio = Dio();
       // Sync with firstTwoFeaturedServiceList
       if (firstTwoFeaturedServiceList.isNotEmpty) {
         final serviceId = featuredServiceList[index].id;
-        final subIndex =
-            firstTwoFeaturedServiceList.indexWhere((s) => s.id == serviceId);
+        final subIndex = firstTwoFeaturedServiceList.indexWhere(
+          (s) => s.id == serviceId,
+        );
         if (subIndex != -1) {
           firstTwoFeaturedServiceList[subIndex].selectedRequiredServiceMan =
               count;
         }
       }
-      log("Decremented to: $count for service ID: ${featuredServiceList[index].id}");
+      log(
+        "Decremented to: $count for service ID: ${featuredServiceList[index].id}",
+      );
     }
     notifyListeners();
   }
@@ -652,15 +636,18 @@ final dio = Dio();
     // Sync with firstTwoFeaturedServiceList if needed
     if (firstTwoFeaturedServiceList.isNotEmpty) {
       final serviceId = currentItem.id;
-      final subIndex =
-          firstTwoFeaturedServiceList.indexWhere((s) => s.id == serviceId);
+      final subIndex = firstTwoFeaturedServiceList.indexWhere(
+        (s) => s.id == serviceId,
+      );
       if (subIndex != -1) {
         firstTwoFeaturedServiceList[subIndex].selectedRequiredServiceMan =
             current;
       }
     }
 
-    log("Service ID: ${currentItem.id}, Required: $required, Selected: $current");
+    log(
+      "Service ID: ${currentItem.id}, Required: $required, Selected: $current",
+    );
     notifyListeners();
   }
 
@@ -670,20 +657,30 @@ final dio = Dio();
     } else {
       log("====== TIME SLOT API ID CHECK ======");
       log("Selected Service ID: ${service?.id}");
-      log("Provider ID (user_id) going to time slot: ${service?.userId ?? service?.user?.id}");
+      log(
+        "Provider ID (user_id) going to time slot: ${service?.userId ?? service?.user?.id}",
+      );
       log("====================================");
 
-      final providerDetail =
-          Provider.of<ProviderDetailsProvider>(context, listen: false);
+      final providerDetail = Provider.of<ProviderDetailsProvider>(
+        context,
+        listen: false,
+      );
       providerDetail.selectProviderIndex = 0;
       providerDetail.notifyListeners();
-      onBook(context, service!, provider: service.user, addTap: () {
-        onAdd(index);
-        notifyListeners();
-      }, minusTap: () {
-        onRemoveService(context, index);
-        notifyListeners();
-      }).then((e) {
+      onBook(
+        context,
+        service!,
+        provider: service.user,
+        addTap: () {
+          onAdd(index);
+          notifyListeners();
+        },
+        minusTap: () {
+          onRemoveService(context, index);
+          notifyListeners();
+        },
+      ).then((e) {
         featuredServiceList[index].selectedRequiredServiceMan =
             featuredServiceList[index].selectedRequiredServiceMan;
         notifyListeners();
@@ -694,9 +691,9 @@ final dio = Dio();
   //booking status list
   Future getBookingStatus() async {
     try {
-      await apiServices
-          .getApi(api.bookingStatus, [], isToken: true)
-          .then((value) {
+      await apiServices.getApi(api.bookingStatus, [], isToken: true).then((
+        value,
+      ) {
         // debugPrint("STATYS L ${value.data}");
         if (value.isSuccess!) {
           for (var data in value.data) {
@@ -709,132 +706,150 @@ final dio = Dio();
       notifyListeners();
 
       // debugPrint("STATYS Lss ${bookingStatusList.length}");
-      int cancelIndex = bookingStatusList.indexWhere((element) =>
-          element.slug!
-                  .toLowerCase()
-                  .replaceAll("-", "")
-                  .replaceAll(" ", "")
-                  .replaceAll("_", "") ==
-              "cancel" ||
-          element.slug!
-                  .toLowerCase()
-                  .replaceAll("-", "")
-                  .replaceAll(" ", "")
-                  .replaceAll("_", "") ==
-              "cancelled");
+      int cancelIndex = bookingStatusList.indexWhere(
+        (element) =>
+            element.slug!
+                    .toLowerCase()
+                    .replaceAll("-", "")
+                    .replaceAll(" ", "")
+                    .replaceAll("_", "") ==
+                "cancel" ||
+            element.slug!
+                    .toLowerCase()
+                    .replaceAll("-", "")
+                    .replaceAll(" ", "")
+                    .replaceAll("_", "") ==
+                "cancelled",
+      );
       if (cancelIndex >= 0) {
         // debugPrint("CANCEl :${bookingStatusList[cancelIndex].slug}");
         translations!.cancel = bookingStatusList[cancelIndex].slug!;
       }
-      int acceptedIndex = bookingStatusList.indexWhere((element) =>
-          element.slug!
-                  .toLowerCase()
-                  .replaceAll("-", "")
-                  .replaceAll(" ", "")
-                  .replaceAll("_", "") ==
-              "accepted" ||
-          element.slug!
-                  .toLowerCase()
-                  .replaceAll("-", "")
-                  .replaceAll(" ", "")
-                  .replaceAll("_", "") ==
-              "accept");
+      int acceptedIndex = bookingStatusList.indexWhere(
+        (element) =>
+            element.slug!
+                    .toLowerCase()
+                    .replaceAll("-", "")
+                    .replaceAll(" ", "")
+                    .replaceAll("_", "") ==
+                "accepted" ||
+            element.slug!
+                    .toLowerCase()
+                    .replaceAll("-", "")
+                    .replaceAll(" ", "")
+                    .replaceAll("_", "") ==
+                "accept",
+      );
       if (acceptedIndex >= 0) {
         // debugPrint("ACCEPTEF :${bookingStatusList[acceptedIndex].slug}");
         translations!.accepted = bookingStatusList[acceptedIndex].slug!;
       }
 
-      int assignedIndex = bookingStatusList.indexWhere((element) =>
-          element.slug!
-                  .toLowerCase()
-                  .replaceAll("-", "")
-                  .replaceAll(" ", "")
-                  .replaceAll("_", "") ==
-              "assign" ||
-          element.slug!
-                  .toLowerCase()
-                  .replaceAll("-", "")
-                  .replaceAll(" ", "")
-                  .replaceAll("_", "") ==
-              "assigned");
+      int assignedIndex = bookingStatusList.indexWhere(
+        (element) =>
+            element.slug!
+                    .toLowerCase()
+                    .replaceAll("-", "")
+                    .replaceAll(" ", "")
+                    .replaceAll("_", "") ==
+                "assign" ||
+            element.slug!
+                    .toLowerCase()
+                    .replaceAll("-", "")
+                    .replaceAll(" ", "")
+                    .replaceAll("_", "") ==
+                "assigned",
+      );
       if (assignedIndex >= 0) {
         // debugPrint("ASSIGNED :${bookingStatusList[assignedIndex].slug}");
         appFonts.assigned = bookingStatusList[assignedIndex].slug!;
       }
 
-      int onTheWayIndex = bookingStatusList.indexWhere((element) =>
-          element.slug!
-              .toLowerCase()
-              .replaceAll("-", "")
-              .replaceAll(" ", "")
-              .replaceAll("_", "") ==
-          "ontheway");
+      int onTheWayIndex = bookingStatusList.indexWhere(
+        (element) =>
+            element.slug!
+                .toLowerCase()
+                .replaceAll("-", "")
+                .replaceAll(" ", "")
+                .replaceAll("_", "") ==
+            "ontheway",
+      );
       if (onTheWayIndex >= 0) {
         // debugPrint("ON THE WAY :${bookingStatusList[onTheWayIndex].slug}");
         appFonts.ontheway = bookingStatusList[onTheWayIndex].slug!;
       }
 
-      int onGoingIndex = bookingStatusList.indexWhere((element) =>
-          element.slug!
-              .toLowerCase()
-              .replaceAll("-", "")
-              .replaceAll(" ", "")
-              .replaceAll("_", "") ==
-          "ongoing");
+      int onGoingIndex = bookingStatusList.indexWhere(
+        (element) =>
+            element.slug!
+                .toLowerCase()
+                .replaceAll("-", "")
+                .replaceAll(" ", "")
+                .replaceAll("_", "") ==
+            "ongoing",
+      );
       if (onGoingIndex >= 0) {
         // debugPrint("ONGOING :${bookingStatusList[onGoingIndex].slug}");
         appFonts.onGoing = bookingStatusList[onGoingIndex].slug!;
       }
 
-      int onHoldIndex = bookingStatusList.indexWhere((element) =>
-          element.slug!
-              .toLowerCase()
-              .replaceAll("-", "")
-              .replaceAll(" ", "")
-              .replaceAll("_", "") ==
-          "onhold");
+      int onHoldIndex = bookingStatusList.indexWhere(
+        (element) =>
+            element.slug!
+                .toLowerCase()
+                .replaceAll("-", "")
+                .replaceAll(" ", "")
+                .replaceAll("_", "") ==
+            "onhold",
+      );
       if (onHoldIndex >= 0) {
         // debugPrint("onHOLD :${bookingStatusList[onHoldIndex].slug}");
         appFonts.onHold = bookingStatusList[onHoldIndex].slug!;
       }
 
-      int restartIndex = bookingStatusList.indexWhere((element) =>
-          element.slug!
-              .toLowerCase()
-              .replaceAll("-", "")
-              .replaceAll(" ", "")
-              .replaceAll("_", "") ==
-          "restart");
+      int restartIndex = bookingStatusList.indexWhere(
+        (element) =>
+            element.slug!
+                .toLowerCase()
+                .replaceAll("-", "")
+                .replaceAll(" ", "")
+                .replaceAll("_", "") ==
+            "restart",
+      );
       if (restartIndex >= 0) {
         debugPrint("RESTART :${bookingStatusList[restartIndex].slug}");
         translations!.restart = bookingStatusList[restartIndex].slug!;
       }
 
-      int startAgainIndex = bookingStatusList.indexWhere((element) =>
-          element.slug!
-              .toLowerCase()
-              .replaceAll("-", "")
-              .replaceAll(" ", "")
-              .replaceAll("_", "") ==
-          "startagain");
+      int startAgainIndex = bookingStatusList.indexWhere(
+        (element) =>
+            element.slug!
+                .toLowerCase()
+                .replaceAll("-", "")
+                .replaceAll(" ", "")
+                .replaceAll("_", "") ==
+            "startagain",
+      );
       if (startAgainIndex >= 0) {
         debugPrint("START AGAIN :${bookingStatusList[startAgainIndex].slug}");
         appFonts.startAgain = bookingStatusList[startAgainIndex].slug!;
       }
 
-      int completedIndex = bookingStatusList.indexWhere((element) =>
-          element.slug!
-                  .toLowerCase()
-                  .replaceAll("-", "")
-                  .replaceAll(" ", "")
-                  .replaceAll("_", "") ==
-              "completed" ||
-          element.slug!
-                  .toLowerCase()
-                  .replaceAll("-", "")
-                  .replaceAll(" ", "")
-                  .replaceAll("_", "") ==
-              "complete");
+      int completedIndex = bookingStatusList.indexWhere(
+        (element) =>
+            element.slug!
+                    .toLowerCase()
+                    .replaceAll("-", "")
+                    .replaceAll(" ", "")
+                    .replaceAll("_", "") ==
+                "completed" ||
+            element.slug!
+                    .toLowerCase()
+                    .replaceAll("-", "")
+                    .replaceAll(" ", "")
+                    .replaceAll("_", "") ==
+                "complete",
+      );
       if (completedIndex >= 0) {
         debugPrint("COMPLETED:${bookingStatusList[completedIndex].slug}");
         translations!.completed = bookingStatusList[completedIndex].slug!;
@@ -855,8 +870,12 @@ final dio = Dio();
   bool isLoadingForBookingHistory = false;
   bool isBookingLoading = false;
 
-  Future getBookingHistory(BuildContext context,
-      {String? search, bool isLoadMore = false, String? timeFilter}) async {
+  Future getBookingHistory(
+    BuildContext context, {
+    String? search,
+    bool isLoadMore = false,
+    String? timeFilter,
+  }) async {
     final booking = Provider.of<BookingProvider>(context, listen: false);
     // final bokkingProvider = Provider.of<BookingProvider>(context,listen: false);
     // Early return if no more data or already loading more
@@ -888,8 +907,8 @@ final dio = Dio();
         timeFilter != null
             ? "${api.booking}?time_filter=${timeFilter.toLowerCase()}"
             : search != null && search.isNotEmpty
-                ? "${api.booking}?search=$search"
-                : api.booking,
+            ? "${api.booking}?search=$search"
+            : api.booking,
         /* "${api.booking}?paginate=5", */
         [],
         isToken: true,
@@ -922,7 +941,9 @@ final dio = Dio();
         booking.hasMoreData = false;
         if (context.mounted) {
           Fluttertoast.showToast(
-              msg: "Failed to fetch bookings", backgroundColor: Colors.red);
+            msg: "Failed to fetch bookings",
+            backgroundColor: Colors.red,
+          );
           // ScaffoldMessenger.of(context).showSnackBar(
           //   const SnackBar(content: Text("Failed to fetch bookings")),
           // );
@@ -935,7 +956,9 @@ final dio = Dio();
       booking.hasMoreData = false;
       if (context.mounted) {
         Fluttertoast.showToast(
-            msg: "An error occurred", backgroundColor: Colors.red);
+          msg: "An error occurred",
+          backgroundColor: Colors.red,
+        );
         // ScaffoldMessenger.of(context).showSnackBar(
         //   const SnackBar(content: Text("An error occurred")),
         // );
@@ -966,8 +989,9 @@ final dio = Dio();
     String? bookingsJson = prefs.getString('booking_history');
     if (bookingsJson != null) {
       List<dynamic> decodedList = jsonDecode(bookingsJson);
-      List<BookingModel> storedBookings =
-          decodedList.map((json) => BookingModel.fromJson(json)).toList();
+      List<BookingModel> storedBookings = decodedList
+          .map((json) => BookingModel.fromJson(json))
+          .toList();
 
       booking.bookingList = storedBookings;
       // log("booking.bookingList::${booking.bookingList}");
@@ -975,7 +999,7 @@ final dio = Dio();
     }
   }
 
-/*  getBookingHistory(context, {search, pageKey = 1}) async {
+  /*  getBookingHistory(context, {search, pageKey = 1}) async {
     log("dfnfjdhskfbdshfbAAAA");
     isLoading = true;
     notifyListeners();
@@ -1109,53 +1133,61 @@ final dio = Dio();
           .collection(collectionName.chats)
           .get()
           .then((value) {
-        if (value.docs.isNotEmpty) {
-          value.docs.asMap().entries.forEach((element) {
-            FirebaseFirestore.instance
-                .collection(collectionName.users)
-                .doc(userModel!.id.toString())
-                .collection(collectionName.chatWith)
-                .doc(userModel!.id.toString() ==
-                        element.value['senderId'].toString()
-                    ? element.value['receiverId'].toString()
-                    : element.value['senderId'].toString())
-                .collection(collectionName.booking)
-                .doc(element.value['bookingId'].toString())
-                .collection(collectionName.chat)
-                .get()
-                .then((v) {
-              for (var d in v.docs) {
+            if (value.docs.isNotEmpty) {
+              value.docs.asMap().entries.forEach((element) {
                 FirebaseFirestore.instance
                     .collection(collectionName.users)
                     .doc(userModel!.id.toString())
                     .collection(collectionName.chatWith)
-                    .doc(userModel!.id.toString() ==
-                            element.value['senderId'].toString()
-                        ? element.value['receiverId'].toString()
-                        : element.value['senderId'].toString())
+                    .doc(
+                      userModel!.id.toString() ==
+                              element.value['senderId'].toString()
+                          ? element.value['receiverId'].toString()
+                          : element.value['senderId'].toString(),
+                    )
                     .collection(collectionName.booking)
                     .doc(element.value['bookingId'].toString())
                     .collection(collectionName.chat)
-                    .doc(d.id)
-                    .delete();
-              }
-            }).then((a) {
-              FirebaseFirestore.instance
-                  .collection(collectionName.users)
-                  .doc(userModel!.id.toString())
-                  .collection(collectionName.chats)
-                  .doc(value.docs[0].id)
-                  .delete();
-            }).then((value) {
-              final chat =
-                  Provider.of<ChatHistoryProvider>(context, listen: false);
-              chat.onReady(context);
-            });
-          });
-        }
+                    .get()
+                    .then((v) {
+                      for (var d in v.docs) {
+                        FirebaseFirestore.instance
+                            .collection(collectionName.users)
+                            .doc(userModel!.id.toString())
+                            .collection(collectionName.chatWith)
+                            .doc(
+                              userModel!.id.toString() ==
+                                      element.value['senderId'].toString()
+                                  ? element.value['receiverId'].toString()
+                                  : element.value['senderId'].toString(),
+                            )
+                            .collection(collectionName.booking)
+                            .doc(element.value['bookingId'].toString())
+                            .collection(collectionName.chat)
+                            .doc(d.id)
+                            .delete();
+                      }
+                    })
+                    .then((a) {
+                      FirebaseFirestore.instance
+                          .collection(collectionName.users)
+                          .doc(userModel!.id.toString())
+                          .collection(collectionName.chats)
+                          .doc(value.docs[0].id)
+                          .delete();
+                    })
+                    .then((value) {
+                      final chat = Provider.of<ChatHistoryProvider>(
+                        context,
+                        listen: false,
+                      );
+                      chat.onReady(context);
+                    });
+              });
+            }
 
-        notifyListeners();
-      });
+            notifyListeners();
+          });
     } catch (e) {
       notifyListeners();
     }
@@ -1167,22 +1199,31 @@ final dio = Dio();
     } else {*/
     log("====== TIME SLOT API ID CHECK =====");
     log("Selected Service ID: ${services?.id}");
-    log("Provider ID (user_id) going to time slot: ${services?.userId ?? services?.user?.id}");
+    log(
+      "Provider ID (user_id) going to time slot: ${services?.userId ?? services?.user?.id}",
+    );
     log("===================================");
 
-    final providerDetail =
-        Provider.of<ProviderDetailsProvider>(context, listen: false);
+    final providerDetail = Provider.of<ProviderDetailsProvider>(
+      context,
+      listen: false,
+    );
     providerDetail.selectProviderIndex = 0;
     providerDetail.notifyListeners();
-    onBook(context, services!, provider: services.user, addTap: () {
-      Provider.of<DashboardProvider>(context, listen: false).onAdd(id);
+    onBook(
+      context,
+      services!,
+      provider: services.user,
+      addTap: () {
+        Provider.of<DashboardProvider>(context, listen: false).onAdd(id);
 
-      notifyListeners();
-    }, minusTap: () {
-      onRemoveService(context, id);
-      notifyListeners();
-    })!
-        .then((e) {
+        notifyListeners();
+      },
+      minusTap: () {
+        onRemoveService(context, id);
+        notifyListeners();
+      },
+    )!.then((e) {
       if (id < featuredServiceList.length) {
         featuredServiceList[id].selectedRequiredServiceMan =
             featuredServiceList[id].requiredServicemen;
@@ -1210,7 +1251,7 @@ final dio = Dio();
       cartCtrl.onReady(context); // Added this to fetch cart from server
       cartCtrl.checkout(context);
       getCoupons();
-/*      cartCtrl.cartList = [];
+      /*      cartCtrl.cartList = [];
       cartCtrl.notifyListeners();*/
       route.pushNamed(context, routeName.cartScreen);
     } else {
@@ -1224,24 +1265,28 @@ final dio = Dio();
   zoneUpdate() async {
     if (position != null) {
       Position position1 = await Geolocator.getCurrentPosition(
-          locationSettings:
-              const LocationSettings(accuracy: LocationAccuracy.high));
-      log("AAAA ${userModel?.locationCordinates!.latitude} || ${position1.latitude}");
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+      log(
+        "AAAA ${userModel?.locationCordinates!.latitude} || ${position1.latitude}",
+      );
       if (position1.latitude != position!.latitude) {
         try {
           dynamic data = {
-            "location": {"lat": position!.latitude, "lng": position!.longitude}
+            "location": {"lat": position!.latitude, "lng": position!.longitude},
           };
 
           await apiServices
               .putApi(api.zoneUpdate, data, isToken: true, isData: true)
               .then((value) {
-            if (value.isSuccess!) {
-              log("SUCCCC");
-            } else {
-              log("SSS :${value.data} // ${value.message}");
-            }
-          });
+                if (value.isSuccess!) {
+                  log("SUCCCC");
+                } else {
+                  log("SSS :${value.data} // ${value.message}");
+                }
+              });
         } catch (e) {
           log("EEEE zoneUpdate :$e");
 
@@ -1256,15 +1301,18 @@ final dio = Dio();
   onAnimateOfficer(TickerProvider sync, context) {
     /* getOffer(); */
     animationController = AnimationController(
-        vsync: sync, duration: const Duration(milliseconds: 1200));
+      vsync: sync,
+      duration: const Duration(milliseconds: 1200),
+    );
     _runAnimation(context);
     notifyListeners();
   }
 
   void _runAnimation(BuildContext context) {
     if (animationController == null || !context.mounted) return;
-    animationController!
-        .repeat(reverse: true); // Automatically repeats forward and reverse
+    animationController!.repeat(
+      reverse: true,
+    ); // Automatically repeats forward and reverse
   }
 
   @override

@@ -1,4 +1,3 @@
-
 import 'package:klpro_user/common/assets/index.dart';
 import 'package:klpro_user/config.dart';
 
@@ -9,173 +8,173 @@ import '../models/array_model.dart';
 
 class AppArray {
   List<Map<String, String>> get onBoardingList => [
-        {
-          "title": translations?.welcomeToJust ?? "",
-          "subtext": translations?.simplyTouch ?? "",
-        },
-        {
-          "title": translations?.findYour ?? "",
-          "subtext": translations?.selectServiceFrom ?? "",
-        },
-        {
-          "title": translations?.bookYourDate ?? "",
-          "subtext": translations?.chooseAnAppropriate ?? "",
-        },
-        {
-          "title": translations?.goOnPayment ?? "",
-          "subtext": translations?.pickYourPayment ?? "",
-        },
-      ];
+    {
+      "title": translations?.welcomeToJust ?? "",
+      "subtext": translations?.simplyTouch ?? "",
+    },
+    {
+      "title": translations?.findYour ?? "",
+      "subtext": translations?.selectServiceFrom ?? "",
+    },
+    {
+      "title": translations?.bookYourDate ?? "",
+      "subtext": translations?.chooseAnAppropriate ?? "",
+    },
+    {
+      "title": translations?.goOnPayment ?? "",
+      "subtext": translations?.pickYourPayment ?? "",
+    },
+  ];
 
-  List<String> get chatHistoryOptionList =>
-      [translations?.refresh ?? "", translations?.clearChat ?? ""];
+  List<String> get chatHistoryOptionList => [
+    translations?.refresh ?? "",
+    translations?.clearChat ?? "",
+  ];
 
   List<DashboardList> dashboardList(context) => [
-        DashboardList(
-            title: translations?.home ?? "Home", // Provide a fallback
-            icon: eSvgAssets.homeOut,
-            icon2: eSvgAssets.homeFill),
-        DashboardList(
-            title: translations?.booking ?? "Booking", // Provide a fallback
-            icon: eSvgAssets.bookingOut,
-            icon2: eSvgAssets.bookingFill),
-        DashboardList(
-            title: translations?.offer ?? "Offer", // Provide a fallback
-            icon: eSvgAssets.offerOut,
-            icon2: eSvgAssets.offerFill),
-        DashboardList(
-            title: translations?.profile ?? "Profile", // Provide a fallback
-            icon: eSvgAssets.profileOut,
-            icon2: eSvgAssets.profileFill),
-      ];
+    DashboardList(
+      title: translations?.home ?? "Home", // Provide a fallback
+      icon: eSvgAssets.homeOut,
+      icon2: eSvgAssets.homeFill,
+    ),
+    DashboardList(
+      title: translations?.booking ?? "Booking", // Provide a fallback
+      icon: eSvgAssets.bookingOut,
+      icon2: eSvgAssets.bookingFill,
+    ),
+    DashboardList(
+      title: translations?.offer ?? "Offer", // Provide a fallback
+      icon: eSvgAssets.offerOut,
+      icon2: eSvgAssets.offerFill,
+    ),
+    DashboardList(
+      title: translations?.profile ?? "Profile", // Provide a fallback
+      icon: eSvgAssets.profileOut,
+      icon2: eSvgAssets.profileFill,
+    ),
+  ];
 
   List<Map<String, Object>> get guestProfileList => [
+    {
+      "title": translations?.aboutApp ?? "",
+      "data": [
         {
-          "title": translations?.aboutApp ?? "",
-          "data": [
-            {
-              "icon": eSvgAssets.mobile,
-              "title": translations!.appDetails,
-              "description": translations!.aboutUs,
-              "isArrow": true
-            },
-            /*{"icon": eSvgAssets.rate, "title": translations!.rateUs, "isArrow": false},*/
-            {
-              "icon": eSvgAssets.share,
-              "title": translations!.shareApp,
-              "isArrow": false
-            },
-            {
-              "icon": eSvgAssets.help,
-              "title": translations!.helpSupport,
-              "isArrow": true
-            },
-            /*  {
+          "icon": eSvgAssets.mobile,
+          "title": translations!.appDetails,
+          "description": translations!.aboutUs,
+          "isArrow": true,
+        },
+        /*{"icon": eSvgAssets.rate, "title": translations!.rateUs, "isArrow": false},*/
+        {
+          "icon": eSvgAssets.share,
+          "title": translations!.shareApp,
+          "isArrow": false,
+        },
+        {
+          "icon": eSvgAssets.help,
+          "title": translations!.helpSupport,
+          "isArrow": true,
+        },
+        /*  {
               "icon": eSvgAssets.chat,
               "title": translations!.supportTickets,
               "isArrow": false
             }, */
-          ]
-        },
-        /* {
+      ],
+    },
+    /* {
           "title": translations!.becomeProvider ?? "",
         } */
-      ];
+  ];
 
   List<Map<String, dynamic>> get profileList => [
+    {
+      "title": translations?.general ?? "",
+      "data": [
         {
-          "title": translations!.general,
-          "data": [
-            {
-              "icon": eSvgAssets.like,
-              "title": translations!.favouriteList,
-              "isArrow": true
-            },
-            {
-              "icon": eSvgAssets.locationOut1,
-              "title": translations!.manageLocations,
-              "isArrow": true
-            },
-            {
-              "icon": eSvgAssets.profileOut,
-              "title": "Provider in your area",
-              "isArrow": true
-            },
-            {
-              "icon": eSvgAssets.coupon,
-              "title": translations!.myReviews,
-              "isArrow": true
-            },
-            {
-              "icon": eSvgAssets.chat,
-              "title": translations!.chatHistory,
-              "isArrow": true
-            },
-          ]
+          "icon": eSvgAssets.like,
+          "title": translations?.favouriteList,
+          "isArrow": true,
         },
         {
-          "title": translations!.aboutApp,
-          "data": [
-            {
-              "icon": eSvgAssets.mobile,
-              "title": translations!.appDetails,
-              "description": translations!.aboutUs,
-              "isArrow": true
-            },
-            {
-              "icon": eSvgAssets.rate,
-              "title": translations!.rateUs,
-              "isArrow": true
-            },
-            {
-              "icon": eSvgAssets.share,
-              "title": translations!.shareApp,
-              "isArrow": true
-            },
-            {
-              "icon": eSvgAssets.help,
-              "title": translations!.helpSupport,
-              "isArrow": true
-            },
-            {
-              "icon": eSvgAssets.phone1,
-              "title": "Call",
-              "isArrow": false
-            },
-/*            {
+          "icon": eSvgAssets.locationOut1,
+          "title": translations?.manageLocations,
+          "isArrow": true,
+        },
+        {
+          "icon": eSvgAssets.profileOut,
+          "title": "Provider in your area",
+          "isArrow": true,
+        },
+        {
+          "icon": eSvgAssets.coupon,
+          "title": translations!.myReviews,
+          "isArrow": true,
+        },
+        {
+          "icon": eSvgAssets.chat,
+          "title": translations!.chatHistory,
+          "isArrow": true,
+        },
+      ],
+    },
+    {
+      "title": translations!.aboutApp,
+      "data": [
+        {
+          "icon": eSvgAssets.mobile,
+          "title": translations!.appDetails,
+          "description": translations!.aboutUs,
+          "isArrow": true,
+        },
+        {
+          "icon": eSvgAssets.rate,
+          "title": translations!.rateUs,
+          "isArrow": true,
+        },
+        {
+          "icon": eSvgAssets.share,
+          "title": translations!.shareApp,
+          "isArrow": true,
+        },
+        {
+          "icon": eSvgAssets.help,
+          "title": translations!.helpSupport,
+          "isArrow": true,
+        },
+        {"icon": eSvgAssets.phone1, "title": "Call", "isArrow": false},
+        /*            {
               "icon": eSvgAssets.chat,
               "title": translations!.staffChat,
               "isArrow": true
             },*/
-            if (appSettingModel!.activation!.referralEnable == "1")
-              {
-                "icon": eSvgAssets.discount,
-                "title": appFonts.referralId,
-                "isArrow": true
-              },
-          ]
+        if (appSettingModel?.activation?.referralEnable == "1")
+          {
+            "icon": eSvgAssets.discount,
+            "title": appFonts.referralId,
+            "isArrow": true,
+          },
+      ],
+    },
+    {"title": ""},
+    {
+      "title": translations!.alertZone,
+      "data": [
+        {
+          "icon": eSvgAssets.delete,
+          "title": translations!.deleteAccount,
+          "isArrow": false,
         },
         {
-          "title": "",
+          "icon": eSvgAssets.logout,
+          "title": translations!.logOut,
+          "isArrow": false,
         },
-        {
-          "title": translations!.alertZone,
-          "data": [
-            {
-              "icon": eSvgAssets.delete,
-              "title": translations!.deleteAccount,
-              "isArrow": false
-            },
-            {
-              "icon": eSvgAssets.logout,
-              "title": translations!.logOut,
-              "isArrow": false
-            }
-          ]
-        },
-      ];
+      ],
+    },
+  ];
 
-/*
+  /*
   List<ProfileModel> profileList(context) => [
         ProfileModel(title: translations!.general, data: [
           Data(
@@ -231,7 +230,7 @@ class AppArray {
     {"title": translations!.electrician, "icon": eSvgAssets.electrician},
     {"title": translations!.painter, "icon": eSvgAssets.painter},
     {"title": translations!.plumber, "icon": eSvgAssets.plumber},
-    {"title": translations!.salon, "icon": eSvgAssets.salon}
+    {"title": translations!.salon, "icon": eSvgAssets.salon},
   ];
 
   var servicesList = [
@@ -239,49 +238,49 @@ class AppArray {
       "title": translations!.cleaningPackage,
       "icon": eImageAssets.cleaning,
       "price": "\$20.05",
-      "color": const Color(0XFFFD4868)
+      "color": const Color(0XFFFD4868),
     },
     {
       "title": translations!.paintingPackage,
       "icon": eImageAssets.paint,
       "price": "\$15.52",
-      "color": const Color(0XFF48BFFD)
+      "color": const Color(0XFF48BFFD),
     },
     {
       "title": translations!.cookingPackage,
       "icon": eImageAssets.fire,
       "price": "\$15.52",
-      "color": const Color(0XFF808CFF)
+      "color": const Color(0XFF808CFF),
     },
     {
       "title": translations!.acRepair,
       "icon": eImageAssets.ac,
       "price": "\$15.52",
-      "color": const Color(0XFFFF7456)
+      "color": const Color(0XFFFF7456),
     },
     {
       "title": translations!.salonPackage,
       "icon": eImageAssets.salon,
       "price": "\$15.52",
-      "color": const Color(0XFFB75CFF)
+      "color": const Color(0XFFB75CFF),
     },
     {
       "title": translations!.plumberPackage,
       "icon": eImageAssets.plumber,
       "price": "\$15.52",
-      "color": const Color(0XFF17D792)
+      "color": const Color(0XFF17D792),
     },
     {
       "title": translations!.electricianPackage,
       "icon": eImageAssets.electrician,
       "price": "\$15.52",
-      "color": const Color(0XFF487AFD)
+      "color": const Color(0XFF487AFD),
     },
     {
       "title": translations!.carpenterPackage,
       "icon": eImageAssets.carpenter,
       "price": "\$15.52",
-      "color": const Color(0XFFFDB448)
+      "color": const Color(0XFFFDB448),
     },
   ];
 
@@ -297,7 +296,7 @@ class AppArray {
       "price": "\$30",
       "time": translations!.min30,
       "description": translations!.foamJet,
-      "serviceman": "Min 2 servicemen required"
+      "serviceman": "Min 2 servicemen required",
     },
     {
       "profile": eImageAssets.fsProfile2,
@@ -310,8 +309,8 @@ class AppArray {
       "price": "\$15.23",
       "time": translations!.min30,
       "description": translations!.foamJet,
-      "serviceman": "Min 1 servicemen required"
-    }
+      "serviceman": "Min 1 servicemen required",
+    },
   ];
 
   var expertServicesList = [
@@ -321,7 +320,7 @@ class AppArray {
       "image": eImageAssets.es1,
       "location": translations!.santaAna,
       "status": "online",
-      "subtext": translations!.paintingService
+      "subtext": translations!.paintingService,
     },
     {
       "name": translations!.estherHoward,
@@ -329,7 +328,7 @@ class AppArray {
       "image": eImageAssets.es2,
       "location": translations!.allentown,
       "status": "offline",
-      "subtext": translations!.paintingCleaning
+      "subtext": translations!.paintingCleaning,
     },
     {
       "name": translations!.guyHawkins,
@@ -337,7 +336,7 @@ class AppArray {
       "image": eImageAssets.es3,
       "location": translations!.mesaNew,
       "status": "online",
-      "subtext": translations!.salonService
+      "subtext": translations!.salonService,
     },
   ];
 
@@ -348,7 +347,7 @@ class AppArray {
       "subtext": translations!.woodenPartition,
       "date": translations!.feb25,
       "message": "23",
-      "by": translations!.byAdmin
+      "by": translations!.byAdmin,
     },
     {
       "name": translations!.manTrimming,
@@ -356,7 +355,7 @@ class AppArray {
       "subtext": translations!.woodenPartition,
       "date": translations!.feb25,
       "message": "30",
-      "by": translations!.byAdmin
+      "by": translations!.byAdmin,
     },
     {
       "name": translations!.bringJoy,
@@ -364,11 +363,11 @@ class AppArray {
       "subtext": translations!.mar30,
       "date": translations!.feb25,
       "message": "10",
-      "by": translations!.byAdmin
+      "by": translations!.byAdmin,
     },
   ];
 
-/*
+  /*
   var profileList = [
     {
       "title": translations!.general,
@@ -436,70 +435,72 @@ class AppArray {
 
   //app setting
   List appSetting(isTheme) => [
-        {
-          'title': isTheme ? translations!.lightTheme : translations!.darkTheme,
-          'icon': eSvgAssets.dark
-        },
-        // {'title': translations!.changeCurrency, 'icon': eSvgAssets.currency},
-        // {'title': translations!.changeLanguage, 'icon': eSvgAssets.translate},
-        {'title': translations!.changePassword, 'icon': eSvgAssets.lock}
-      ];
+    {
+      'title': isTheme ? translations!.lightTheme : translations!.darkTheme,
+      'icon': eSvgAssets.dark,
+    },
+    // {'title': translations!.changeCurrency, 'icon': eSvgAssets.currency},
+    // {'title': translations!.changeLanguage, 'icon': eSvgAssets.translate},
+    {'title': translations!.changePassword, 'icon': eSvgAssets.lock},
+  ];
 
   List appGuestSetting(isTheme) => [
-        {
-          'title': isTheme ? translations!.lightTheme : translations!.darkTheme,
-          'icon': eSvgAssets.dark
-        },
-        // {'title': translations!.changeCurrency, 'icon': eSvgAssets.currency},
-        // {'title': translations!.changeLanguage, 'icon': eSvgAssets.translate},
-      ];
+    {
+      'title': isTheme ? translations!.lightTheme : translations!.darkTheme,
+      'icon': eSvgAssets.dark,
+    },
+    // {'title': translations!.changeCurrency, 'icon': eSvgAssets.currency},
+    // {'title': translations!.changeLanguage, 'icon': eSvgAssets.translate},
+  ];
 
-//currency
+  //currency
   List<Map<String, dynamic>> get currencyList => [
-        {
-          'title': translations!.usDollar,
-          'icon': eSvgAssets.usCurrency,
-          "code": "USD",
-          "symbol": "\$",
-          'USD': 1,
-          'INR': 83.24,
-          'POU': 0.83,
-          'EUR': 0.96,
-        },
-        {
-          'title': translations!.euro,
-          'icon': eSvgAssets.euroCurrency,
-          "code": "EUR",
-          "symbol": '€',
-          'USD': 1.05,
-          'INR': 87.10,
-          'POU': 0.87,
-          'EUR': 1,
-        },
-        {
-          'title': translations!.inr,
-          'icon': eSvgAssets.inCurrency,
-          "code": "INR",
-          "symbol": '₹',
-          'USD': 0.012,
-          'INR': 1,
-          'POU': 0.010,
-          'EUR': 0.011,
-        },
-        {
-          'title': translations!.pound,
-          'icon': eSvgAssets.ukCurrency,
-          "code": "POU",
-          "symbol": "£",
-          'USD': 1.22,
-          'INR': 101.74,
-          'POU': 1,
-          'EUR': 1.15,
-        }
-      ];
+    {
+      'title': translations!.usDollar,
+      'icon': eSvgAssets.usCurrency,
+      "code": "USD",
+      "symbol": "\$",
+      'USD': 1,
+      'INR': 83.24,
+      'POU': 0.83,
+      'EUR': 0.96,
+    },
+    {
+      'title': translations!.euro,
+      'icon': eSvgAssets.euroCurrency,
+      "code": "EUR",
+      "symbol": '€',
+      'USD': 1.05,
+      'INR': 87.10,
+      'POU': 0.87,
+      'EUR': 1,
+    },
+    {
+      'title': translations!.inr,
+      'icon': eSvgAssets.inCurrency,
+      "code": "INR",
+      "symbol": '₹',
+      'USD': 0.012,
+      'INR': 1,
+      'POU': 0.010,
+      'EUR': 0.011,
+    },
+    {
+      'title': translations!.pound,
+      'icon': eSvgAssets.ukCurrency,
+      "code": "POU",
+      "symbol": "£",
+      'USD': 1.22,
+      'INR': 101.74,
+      'POU': 1,
+      'EUR': 1.15,
+    },
+  ];
 
-  List<String> get favouriteTabList =>
-      [translations?.provider ?? "", translations?.service ?? ""];
+  List<String> get favouriteTabList => [
+    translations?.provider ?? "",
+    translations?.service ?? "",
+  ];
 
   var reviewList = [
     {
@@ -531,77 +532,69 @@ class AppArray {
   ];
 
   List<Map<String, dynamic>> get editReviewList => [
-        {
-          "icon": eSvgAssets.bad,
-          "title": translations!.bad,
-          "gif": eGifAssets.bad
-        },
-        {
-          "icon": eSvgAssets.okay,
-          "title": translations!.okay,
-          "gif": eGifAssets.okay
-        },
-        {
-          "icon": eSvgAssets.good,
-          "title": translations!.good,
-          "gif": eGifAssets.good
-        },
-        {
-          "icon": eSvgAssets.amazing,
-          "title": translations!.amazing,
-          "gif": eGifAssets.amazing
-        },
-        {
-          "icon": eSvgAssets.excellent,
-          "title": translations!.excellent,
-          "gif": eGifAssets.excellent
-        },
-      ];
+    {"icon": eSvgAssets.bad, "title": translations!.bad, "gif": eGifAssets.bad},
+    {
+      "icon": eSvgAssets.okay,
+      "title": translations!.okay,
+      "gif": eGifAssets.okay,
+    },
+    {
+      "icon": eSvgAssets.good,
+      "title": translations!.good,
+      "gif": eGifAssets.good,
+    },
+    {
+      "icon": eSvgAssets.amazing,
+      "title": translations!.amazing,
+      "gif": eGifAssets.amazing,
+    },
+    {
+      "icon": eSvgAssets.excellent,
+      "title": translations!.excellent,
+      "gif": eGifAssets.excellent,
+    },
+  ];
 
   List<String> get selectErrorList => [
-        translations?.purchaseError ?? "",
-        translations?.technicalError ?? "",
-        translations?.appError ?? "",
-        translations?.feedback ?? ""
-      ];
+    translations?.purchaseError ?? "",
+    translations?.technicalError ?? "",
+    translations?.appError ?? "",
+    translations?.feedback ?? "",
+  ];
 
   List<Map<String, dynamic>> get categoryList => [
-        {
-          "icon": eSvgAssets.cleaning,
-          "isCheck": false,
-          "title": translations!.cleaning,
-        },
-        {
-          "icon": eSvgAssets.ac,
-          "isCheck": false,
-          "title": translations!.acRepair,
-        },
-        {
-          "icon": eSvgAssets.carpenter,
-          "isCheck": false,
-          "title": translations!.carpenter,
-        },
-        {
-          "icon": eSvgAssets.cooking,
-          "isCheck": false,
-          "title": translations!.cooking,
-        },
-        {
-          "icon": eSvgAssets.electrician,
-          "isCheck": false,
-          "title": translations!.electrician,
-        },
-        {
-          "icon": eSvgAssets.painter,
-          "isCheck": false,
-          "title": translations!.painter,
-        },
-        {
-          "icon": eSvgAssets.plumber,
-          "isCheck": false,
-          "title": translations!.plumber,
-        },
-      ];
+    {
+      "icon": eSvgAssets.cleaning,
+      "isCheck": false,
+      "title": translations!.cleaning,
+    },
+    {"icon": eSvgAssets.ac, "isCheck": false, "title": translations!.acRepair},
+    {
+      "icon": eSvgAssets.carpenter,
+      "isCheck": false,
+      "title": translations!.carpenter,
+    },
+    {
+      "icon": eSvgAssets.cooking,
+      "isCheck": false,
+      "title": translations!.cooking,
+    },
+    {
+      "icon": eSvgAssets.electrician,
+      "isCheck": false,
+      "title": translations!.electrician,
+    },
+    {
+      "icon": eSvgAssets.painter,
+      "isCheck": false,
+      "title": translations!.painter,
+    },
+    {
+      "icon": eSvgAssets.plumber,
+      "isCheck": false,
+      "title": translations!.plumber,
+    },
+  ];
 
   var ratingList = [
     {"rate": "5", "icon": eSvgAssets.star5, "value": 5},
@@ -612,53 +605,50 @@ class AppArray {
   ];
 
   List<String> get filterList => [
-        translations?.category ?? "",
-        translations?.priceRating ?? "",
-        translations?.distance ?? "",
-      ];
+    translations?.category ?? "",
+    translations?.priceRating ?? "",
+    translations?.distance ?? "",
+  ];
 
   List<String> get filterList1 => [
-        translations?.provider ?? "",
-        translations?.priceRating ?? "",
-        translations?.distance ?? "",
-      ];
+    translations?.provider ?? "",
+    translations?.priceRating ?? "",
+    translations?.distance ?? "",
+  ];
 
   List<Map<String, dynamic>> get experienceList => [
-        {
-          "id": 0,
-          "title": translations?.highestExperience ?? '',
-        },
-        {"id": 1, "title": translations?.lowestExperience ?? ''},
-        {"id": 2, "title": translations?.highestServed ?? ''},
-        {"id": 3, "title": translations?.lowestServed ?? ''},
-      ];
+    {"id": 0, "title": translations?.highestExperience ?? ''},
+    {"id": 1, "title": translations?.lowestExperience ?? ''},
+    {"id": 2, "title": translations?.highestServed ?? ''},
+    {"id": 3, "title": translations?.lowestServed ?? ''},
+  ];
 
   List<Map<String, dynamic>> get reviewLowHighList => [
-        {"id": 0, "title": translations!.lowestRate},
-        {"id": 1, "title": translations!.highestRate},
-      ];
+    {"id": 0, "title": translations!.lowestRate},
+    {"id": 1, "title": translations!.highestRate},
+  ];
 
   List<String> get languagesList => [
-        translations?.english ?? "",
-        translations?.spanish ?? "",
-        translations?.chines ?? ""
-      ];
+    translations?.english ?? "",
+    translations?.spanish ?? "",
+    translations?.chines ?? "",
+  ];
 
   List<String> get servicemanChooseList => [
-        translations?.letAppChoose ?? "",
-        translations?.selectServicemenAs ?? ""
-      ];
+    translations?.letAppChoose ?? "",
+    translations?.selectServicemenAs ?? "",
+  ];
 
   List<Map<String, dynamic>> get selectList => [
-        {"image": eSvgAssets.gallery, "title": translations!.chooseFromGallery},
-        {"image": eSvgAssets.camera, "title": translations!.openCamera}
-      ];
+    {"image": eSvgAssets.gallery, "title": translations!.chooseFromGallery},
+    {"image": eSvgAssets.camera, "title": translations!.openCamera},
+  ];
 
   List<Map<String, dynamic>> get selectRepaymentOrCancel => [
-        {"title": translations!.cancelBooking},
-        {"title": translations!.cashOnDelivery},
-        {"title": translations!.selectAnotherPayment}
-      ];
+    {"title": translations!.cancelBooking},
+    {"title": translations!.cashOnDelivery},
+    {"title": translations!.selectAnotherPayment},
+  ];
 
   List monthList = [
     {"title": "January", "index": 1},
@@ -672,12 +662,13 @@ class AppArray {
     {"title": "September", "index": 9},
     {"title": "October", "index": 10},
     {"title": "November", "index": 11},
-    {"title": "December", "index": 12}
+    {"title": "December", "index": 12},
   ];
 
   List<String> hourList = List.generate(12, (index) {
-    DateTime time =
-        DateTime.now().add(Duration(hours: index)); // +1 for 1 hour ahead
+    DateTime time = DateTime.now().add(
+      Duration(hours: index),
+    ); // +1 for 1 hour ahead
     String formattedTime = DateFormat('h').format(time);
     return formattedTime;
   });
@@ -697,35 +688,32 @@ class AppArray {
   var amPmList = ["PM", "AM"];
 
   List<Map<String, dynamic>> get jobExperienceList => [
-        {
-          "id": 0,
-          "title": translations!.highestExperience,
-        },
-        {"id": 1, "title": translations!.lowestExperience},
-      ];
+    {"id": 0, "title": translations!.highestExperience},
+    {"id": 1, "title": translations!.lowestExperience},
+  ];
 
   List<String> get expertiseList => [
-        translations?.acRepair ?? "",
-        translations?.carpenter ?? "",
-        translations?.cleaning ?? "",
-      ];
+    translations?.acRepair ?? "",
+    translations?.carpenter ?? "",
+    translations?.cleaning ?? "",
+  ];
 
   List<String> get bookingFilterList => [
-        translations?.status ?? "",
-        translations?.date ?? "",
-        translations?.category ?? "",
-      ];
+    translations?.status ?? "",
+    translations?.date ?? "",
+    translations?.category ?? "",
+  ];
 
   List<Map<String, dynamic>> get socialList => [
-        {"image": eSvgAssets.phone1, "title": translations!.call},
-        {"image": eSvgAssets.chat, "title": translations!.chat},
-        // {"image": eSvgAssets.wp, "title": translations!.wp},
-      ];
+    {"image": eSvgAssets.phone1, "title": translations!.call},
+    {"image": eSvgAssets.chat, "title": translations!.chat},
+    // {"image": eSvgAssets.wp, "title": translations!.wp},
+  ];
 
   List<Map<String, dynamic>> get remotelySocialList => [
-        {"image": eSvgAssets.phone1, "title": translations!.call},
-        // {"image": eSvgAssets.wp, "title": translations!.wp},
-      ];
+    {"image": eSvgAssets.phone1, "title": translations!.call},
+    // {"image": eSvgAssets.wp, "title": translations!.wp},
+  ];
 
   var optionList = [
     translations!.audioCall,
@@ -749,7 +737,7 @@ class AppArray {
           "price": "15.23",
           "bookingId": "#15263",
           "status": translations!.accepted,
-          "serviceman": "2"
+          "serviceman": "2",
         },
         {
           "image": eImageAssets.es1,
@@ -757,24 +745,19 @@ class AppArray {
           "price": "10.15",
           "bookingId": "#15264",
           "status": translations!.ongoing,
-          "serviceman": "0"
+          "serviceman": "0",
         },
-      ]
-    }
+      ],
+    },
   ];
 
   List<String> get themeModeList => [
-        translations?.lightTheme ?? "",
-        translations?.darkTheme ?? "",
-        translations!.systemDefault ?? ''
-      ];
-
-  var durationList = [
-    "Hours",
-    "Minutes",
+    translations?.lightTheme ?? "",
+    translations?.darkTheme ?? "",
+    translations!.systemDefault ?? '',
   ];
 
-
+  var durationList = ["Hours", "Minutes"];
 
   final List<String> weekdayList = [
     translations?.sunday ?? "Sunday",

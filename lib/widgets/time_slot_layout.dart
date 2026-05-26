@@ -7,26 +7,69 @@ import '../config.dart';
 
 class TimeSlotLayout extends StatelessWidget {
   final String? title;
+
+  /// SAFE NEW PARAM
+  final String? selectedValue;
+
   final GestureTapCallback? onTap;
-  const TimeSlotLayout({super.key, this.onTap, this.title});
+
+  const TimeSlotLayout({
+    super.key,
+    this.onTap,
+    this.title,
+    this.selectedValue,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(language(context, title!),
-          style: appCss.dmDenseMedium14.textColor(appColor(context).darkText)),
-      const VSpace(Sizes.s6),
-      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Text(language(context, translations!.selectDateTime),
-            style:
-                appCss.dmDenseMedium14.textColor(appColor(context).lightText)),
-        SvgPicture.asset(eSvgAssets.calendar)
-      ])
-          .paddingAll(Insets.i15)
-          .boxShapeExtension(color: appColor(context).whiteBg)
-          .inkWell(onTap: onTap /*value.onProviderDateTimeSelect(context)*/)
-    ])
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          language(context, title!),
+          style: appCss.dmDenseMedium14.textColor(
+            appColor(context).darkText,
+          ),
+        ),
+
+        const VSpace(Sizes.s6),
+
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                selectedValue ??
+                    language(
+                      context,
+                      translations!.selectDateTime,
+                    ),
+
+                overflow: TextOverflow.ellipsis,
+
+                style: appCss.dmDenseMedium14.textColor(
+                  selectedValue != null
+                      ? appColor(context).darkText
+                      : appColor(context).lightText,
+                ),
+              ),
+            ),
+
+            SvgPicture.asset(
+              eSvgAssets.calendar,
+            ),
+          ],
+        )
+            .paddingAll(Insets.i15)
+            .boxShapeExtension(
+              color: appColor(context).whiteBg,
+            )
+            .inkWell(onTap: onTap),
+      ],
+    )
         .paddingAll(AppRadius.r15)
-        .boxShapeExtension(color: appColor(context).fieldCardBg);
+        .boxShapeExtension(
+          color: appColor(context).fieldCardBg,
+        );
   }
 }

@@ -6,13 +6,15 @@ import 'package:figma_squircle/figma_squircle.dart';
 import 'package:klpro_user/common/assets/index.dart';
 import 'package:klpro_user/common/extension/text_style_extensions.dart';
 import 'package:klpro_user/common/extension/widget_extension.dart';
+import 'package:carousel_slider/carousel_controller.dart';
 import 'package:klpro_user/models/step2model.dart';
-import 'package:klpro_user/screens/app_pages_screens/slot_booking_screen/layouts/date_range_picker_layout.dart';
-import 'package:klpro_user/screens/app_pages_screens/slot_booking_screen/layouts/week_bottom_sheet.dart';
-import 'package:klpro_user/screens/app_pages_screens/slot_booking_screen/layouts/custom_date_bottom_sheet.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:klpro_user/screens/app_pages_screens/slot_booking_screen/layouts/custom_date_bottom_sheet.dart';
+import 'package:klpro_user/screens/app_pages_screens/slot_booking_screen/layouts/date_range_picker_layout.dart';
+import 'package:klpro_user/screens/app_pages_screens/slot_booking_screen/layouts/week_bottom_sheet.dart';
+import 'package:klpro_user/screens/app_pages_screens/slot_booking_screen/layouts/year_dialog.dart';
 import 'package:klpro_user/users_services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,7 +23,6 @@ import '../../config.dart';
 import '../../models/is_valid_time_slot_model.dart';
 import '../../models/time_slot_model.dart';
 import '../../screens/app_pages_screens/slot_booking_screen/layouts/provider_time_slot_layout.dart';
-import '../../screens/app_pages_screens/slot_booking_screen/layouts/year_dialog.dart';
 import '../../utils/date_time_picker.dart';
 
 int getHashCode(DateTime key) {
@@ -36,22 +37,85 @@ class SlotBookingProvider with ChangeNotifier {
   int selectProviderIndex = 0;
   List timeSlot = [];
   List newTimeSlot = [];
+  String _slotChosenValue = "";
+  String get slotChosenValue => _slotChosenValue;
+
+  set slotChosenValue(String value) {
+    _slotChosenValue = value;
+    notifyListeners();
+  }
+
+  String _selectedHour = "12";
+  String _selectedMinute = "00";
+  String _selectedPeriod = "PM";
+
+  /// ======================================
+  /// CAROUSEL CONTROLLERS
+  /// ======================================
+
+  CarouselSliderController hourController = CarouselSliderController();
+
+  CarouselSliderController minuteController = CarouselSliderController();
+
+  CarouselSliderController amPmController = CarouselSliderController();
+
+  /// ======================================
+  /// HOUR LIST
+  /// ======================================
+
+  List<String> hourList = List.generate(
+    12,
+
+    (index) => (index + 1).toString().padLeft(2, '0'),
+  );
+
+  /// ======================================
+  /// MINUTE LIST
+  /// ======================================
+
+  List<String> minuteList = List.generate(
+    60,
+
+    (index) => index.toString().padLeft(2, '0'),
+  );
+
+  /// ======================================
+  /// AM PM LIST
+  /// ======================================
+
+  List<String> amPmList = ["AM", "PM"];
+
+  String get selectedHour => _selectedHour;
+  set selectedHour(String value) {
+    _selectedHour = value;
+  }
+
+  String get selectedMinute => _selectedMinute;
+  set selectedMinute(String value) {
+    _selectedMinute = value;
+  }
+
+  String get selectedPeriod => _selectedPeriod;
+  set selectedPeriod(String value) {
+    _selectedPeriod = value;
+  }
+
+  int selectAmPm = 0;
   int demoInt = 0;
   dynamic chosenValue;
   DateTime? selectedDay;
   DateTime selectedYear = DateTime.now();
   DateTime currentDate = DateTime.now();
   List<String> newWeekDayList = [];
-//ServicesDetailsProvider
+  //ServicesDetailsProvider
   TextEditingController startDateCtrl = TextEditingController();
   TextEditingController endDateCtrl = TextEditingController();
   ScrollController scrollController = ScrollController();
   final ValueNotifier<DateTime> focusedDay = ValueNotifier(DateTime.now());
-  dynamic slotChosenValue, slotTime;
+  dynamic slotTime;
   DateTime? slotSelectedDay;
   DateTime slotSelectedYear = DateTime.now();
-  RangeSelectionMode rangeSelectionMode = RangeSelectionMode
-      .toggledOn; // Can be toggled on/off by longpressing a date
+  RangeSelectionMode rangeSelectionMode = RangeSelectionMode.toggledOn;
   DateTime? rangeStart;
   DateTime? rangeEnd;
   List<DateTime> selectedDateList = [];
@@ -67,9 +131,12 @@ class SlotBookingProvider with ChangeNotifier {
   PageController pageController = PageController();
   CalendarFormat calendarFormat = CalendarFormat.week;
   CalendarFormat calendarFormatMonth = CalendarFormat.month;
-  final CarouselSliderController carouselController = CarouselSliderController();
-  final CarouselSliderController carouselController1 = CarouselSliderController();
-  final CarouselSliderController carouselController2 = CarouselSliderController();
+  final CarouselSliderController carouselController =
+      CarouselSliderController();
+  final CarouselSliderController carouselController1 =
+      CarouselSliderController();
+  final CarouselSliderController carouselController2 =
+      CarouselSliderController();
   final ValueNotifier<DateTime> focuseDay = ValueNotifier(DateTime.now());
   IsValidTimeSlotModel? isValidTimeSlotModel;
   List<AvailableProvider> availableProviders = [];
@@ -100,6 +167,12 @@ class SlotBookingProvider with ChangeNotifier {
     super.dispose();
   }
 
+  void updateSlotDateTime(String valueData) {
+    slotChosenValue = valueData;
+
+    notifyListeners();
+  }
+
   onChangeWeekDay(String day) {
     if (!newWeekDayList.contains(day)) {
       newWeekDayList.add(day);
@@ -114,10 +187,12 @@ class SlotBookingProvider with ChangeNotifier {
   onCustomDateToggle(DateTime date) {
     // Normalize date to remove time component
     final normalizedDate = DateTime(date.year, date.month, date.day);
-    final index = customSelectedDates.indexWhere((d) =>
-        d.year == normalizedDate.year &&
-        d.month == normalizedDate.month &&
-        d.day == normalizedDate.day);
+    final index = customSelectedDates.indexWhere(
+      (d) =>
+          d.year == normalizedDate.year &&
+          d.month == normalizedDate.month &&
+          d.day == normalizedDate.day,
+    );
 
     if (index >= 0) {
       customSelectedDates.removeAt(index);
@@ -138,11 +213,12 @@ class SlotBookingProvider with ChangeNotifier {
 
   onCustomDateBottomSheet(BuildContext context) {
     showModalBottomSheet(
-        isScrollControlled: true,
-        context: context,
-        builder: (BuildContext context) {
-          return const CustomDateBottomSheet();
-        });
+      isScrollControlled: true,
+      context: context,
+      builder: (BuildContext context) {
+        return const CustomDateBottomSheet();
+      },
+    );
   }
 
   clearCustomDates() {
@@ -169,11 +245,16 @@ class SlotBookingProvider with ChangeNotifier {
   }
 
   addNewLoc(context) {
-    final loc = Provider.of<LocationProvider>(context, listen: false);
-    route.pushNamed(context, routeName.currentLocation).then((e) async {
-      await loc.getLocationList(context);
-      if (loc.addressList.length == 1) {
-        address = loc.addressList[0];
+    route.pushNamed(context, routeName.addNewLocation).then((e) {
+      debugPrint("APPU_DEBUG BACK FROM LOCATION SCREEN");
+
+      /// SET LOCATION IN SLOT1
+
+      if (userPrimaryAddress != null) {
+        address = userPrimaryAddress;
+
+        debugPrint("APPU_DEBUG LOCATION VALUE SET IN SLOT1");
+
         notifyListeners();
       }
     });
@@ -194,14 +275,18 @@ class SlotBookingProvider with ChangeNotifier {
 
   onDateSelect(context, date, {isStart = true}) {
     showModalBottomSheet(
-        isScrollControlled: true,
-        context: context,
-        builder: (context) => StatefulBuilder(builder: (context, setState) {
-              return Consumer<SlotBookingProvider>(
-                  builder: (context, value, child) {
-                return const DateRangePickerLayout();
-              });
-            }));
+      isScrollControlled: true,
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return Consumer<SlotBookingProvider>(
+            builder: (context, value, child) {
+              return const DateRangePickerLayout();
+            },
+          );
+        },
+      ),
+    );
   }
 
   // date selection button and go to back
@@ -209,12 +294,18 @@ class SlotBookingProvider with ChangeNotifier {
     route.pop(context);
     if (rangeEnd != null) {
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
           duration: const Duration(milliseconds: 500),
-          content: Text("opps!! you have not select date yet.",
-              style: appCss.dmDenseMedium12
-                  .textColor(appColor(context).whiteColor)),
-          backgroundColor: appColor(context).red));
+          content: Text(
+            "opps!! you have not select date yet.",
+            style: appCss.dmDenseMedium12.textColor(
+              appColor(context).whiteColor,
+            ),
+          ),
+          backgroundColor: appColor(context).red,
+        ),
+      );
     }
     notifyListeners();
   }
@@ -222,10 +313,11 @@ class SlotBookingProvider with ChangeNotifier {
   //select year
   selectYear(context) async {
     showDialog(
-        context: context,
-        builder: (BuildContext context3) {
-          return const YearAlertDialog();
-        });
+      context: context,
+      builder: (BuildContext context3) {
+        return const YearAlertDialog();
+      },
+    );
   }
 
   onRangeSelect(start, end, focusedDay) {
@@ -238,8 +330,9 @@ class SlotBookingProvider with ChangeNotifier {
     log("STTT :$rangeEnd");
     rangeSelectionMode = RangeSelectionMode.toggledOn;
     startDateCtrl.text = DateFormat("dd-MM-yyyy").format(rangeStart!);
-    endDateCtrl.text =
-        rangeEnd != null ? DateFormat("dd-MM-yyyy").format(rangeEnd!) : "";
+    endDateCtrl.text = rangeEnd != null
+        ? DateFormat("dd-MM-yyyy").format(rangeEnd!)
+        : "";
     calculateSelectedDays();
     notifyListeners();
   }
@@ -284,192 +377,213 @@ class SlotBookingProvider with ChangeNotifier {
   }
 
   Future<void> fetchTimeSlots() async {
-    try {
-      log("servicesCart!.user!.id::${servicesCart!.user!.id}");
-      // isLoading = true;
-      notifyListeners();
-      final response = await apiServices.getApi(
-        "${api.providerTimeSlot}/${servicesCart?.userId ?? 3}",
-        [],
-        isToken: true,
-      );
-      log("GET API Response: ${response.toString()}");
+    debugPrint("APPU_DEBUG TIME SLOT API DISABLED");
 
-      if (response.isSuccess!) {
-        final timeSlots = response.data['time_slots'] as List<dynamic>;
-        for (var slot in timeSlots) {
-          final day = slot['day'].toString().toUpperCase();
-          final slots = List<String>.from(slot['slots'] ?? []);
-          final isActive = slot['is_active'] == 1 ? 1 : 0;
-        }
-      } else {
-        log("GET API failed: ${response.message}");
+    DateTime now = DateTime.now();
+
+    /// USER CAN BOOK AFTER 10 MINUTES
+    DateTime minBookingTime = now.add(const Duration(minutes: 10));
+
+    timeSlot.clear();
+
+    /// GENERATE 30 MIN SLOT
+    for (int i = 0; i < 48; i++) {
+      DateTime slot = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        0,
+        0,
+      ).add(Duration(minutes: i * 30));
+
+      /// ONLY FUTURE SLOT
+      if (slot.isAfter(minBookingTime)) {
+        timeSlot.add(DateFormat("hh:mm a").format(slot));
+
+        debugPrint("APPU_DEBUG SLOT => $slot");
       }
-    } catch (e, s) {
-      log("Fetch time slots error: $e\n$s");
-    } finally {
-      // isLoading = false;
-      notifyListeners();
     }
+
+    notifyListeners();
   }
 
   Future<bool> checkServiceAvailability(context) async {
-    try {
-      final locationCtrl =
-          Provider.of<LocationProvider>(context, listen: false);
-      // Ensure zone is up to date for current address before checking availability
-      if (address != null) {
-        log("Updating zone for availability check: ${address!.latitude}, ${address!.longitude}");
-        await locationCtrl.getZoneId(context,
-            lat: address!.latitude, lan: address!.longitude, isLocation: true);
-      }
+    debugPrint("APPU_DEBUG SERVICE AVAILABILITY DISABLED");
 
-      SharedPreferences pref = await SharedPreferences.getInstance();
-      String zoneId = pref.getString(session.zoneIds) ?? "";
-      String serviceId = servicesCart!.id.toString();
-
-      final response = await apiServices.getApi(
-          "${api.checkServiceAvailability}?service_id=$serviceId&zone_id=$zoneId",
-          [],
-          isData: true);
-
-      if (response.isSuccess!) {
-        bool isAvailable = response.data['is_available'] ?? false;
-        if (!isAvailable) {
-          String message = response.data['message'] ??
-              "This service is not available in your selected location.";
-          Fluttertoast.showToast(
-              msg: message,
-              backgroundColor: appColor(context).red,
-              textColor: appColor(context).whiteColor);
-          return false;
-        }
-      }
-      return true;
-    } catch (e) {
-      log("Error in checkServiceAvailability: $e");
-      return true; // Continue on error to avoid blocking user if API fails
-    }
+    return true;
   }
 
   deleteJobRequestConfirmation(context, sync, index) {
     animateDesign(sync);
     showDialog(
-        context: context,
-        builder: (context1) {
-          return StatefulBuilder(builder: (context2, setState) {
+      context: context,
+      builder: (context1) {
+        return StatefulBuilder(
+          builder: (context2, setState) {
             return Consumer<SlotBookingProvider>(
-                builder: (context3, value, child) {
-              return AlertDialog(
+              builder: (context3, value, child) {
+                return AlertDialog(
                   contentPadding: EdgeInsets.zero,
-                  insetPadding:
-                      const EdgeInsets.symmetric(horizontal: Insets.i20),
+                  insetPadding: const EdgeInsets.symmetric(
+                    horizontal: Insets.i20,
+                  ),
                   shape: const SmoothRectangleBorder(
-                      borderRadius: SmoothBorderRadius.all(SmoothRadius(
-                          cornerRadius: AppRadius.r14, cornerSmoothing: 1))),
+                    borderRadius: SmoothBorderRadius.all(
+                      SmoothRadius(
+                        cornerRadius: AppRadius.r14,
+                        cornerSmoothing: 1,
+                      ),
+                    ),
+                  ),
                   backgroundColor: appColor(context).whiteBg,
-                  content: Stack(alignment: Alignment.topRight, children: [
-                    Column(mainAxisSize: MainAxisSize.min, children: [
-                      // Gif
-                      Stack(alignment: Alignment.topCenter, children: [
-                        Stack(alignment: Alignment.topCenter, children: [
-                          SizedBox(
-                                  width: MediaQuery.of(context).size.width,
-                                  child: Stack(
+                  content: Stack(
+                    alignment: Alignment.topRight,
+                    children: [
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Gif
+                          Stack(
+                            alignment: Alignment.topCenter,
+                            children: [
+                              Stack(
+                                alignment: Alignment.topCenter,
+                                children: [
+                                  SizedBox(
+                                    width: MediaQuery.of(context).size.width,
+                                    child: Stack(
                                       alignment: Alignment.bottomCenter,
                                       children: [
                                         SizedBox(
-                                            height: Sizes.s208,
-                                            width: Sizes.s150,
+                                          height: Sizes.s208,
+                                          width: Sizes.s150,
+                                          child: AnimatedContainer(
+                                            duration: const Duration(
+                                              milliseconds: 200,
+                                            ),
+                                            curve: isPositionedRight
+                                                ? Curves.bounceIn
+                                                : Curves.bounceOut,
+                                            alignment: isPositionedRight
+                                                ? Alignment.center
+                                                : Alignment.topCenter,
                                             child: AnimatedContainer(
-                                                duration: const Duration(
-                                                    milliseconds: 200),
-                                                curve: isPositionedRight
-                                                    ? Curves.bounceIn
-                                                    : Curves.bounceOut,
-                                                alignment: isPositionedRight
-                                                    ? Alignment.center
-                                                    : Alignment.topCenter,
-                                                child: AnimatedContainer(
-                                                    duration: const Duration(
-                                                        milliseconds: 200),
-                                                    height: 40,
-                                                    child: Image.asset(
-                                                        eImageAssets
-                                                            .removeAddOn)))),
-                                        Image.asset(eImageAssets.dustbin,
-                                                height: Sizes.s88,
-                                                width: Sizes.s88)
-                                            .paddingOnly(bottom: Insets.i24)
-                                      ]))
-                              .decorated(
-                                  color: appColor(context).fieldCardBg,
-                                  borderRadius:
-                                      BorderRadius.circular(AppRadius.r10)),
-                        ]),
-                        if (offsetAnimation != null)
-                          SlideTransition(
-                              position: offsetAnimation!,
-                              child: (offsetAnimation != null &&
-                                      isAnimateOver == true)
-                                  ? Image.asset(eImageAssets.dustbinCover,
-                                      height: 38)
-                                  : const SizedBox())
-                      ]),
-                      // Sub text
-                      const VSpace(Sizes.s15),
-                      Text(language(context, translations!.removeAddOnsDes),
-                              textAlign: TextAlign.center,
-                              style: appCss.dmDenseRegular14
-                                  .textColor(appColor(context).lightText)
-                                  .textHeight(1.6))
-                          .paddingSymmetric(horizontal: Sizes.s56),
-                      const VSpace(Sizes.s25),
-                      Row(children: [
-                        Expanded(
-                            child: ButtonCommon(
-                                onTap: () => route.pop(context),
-                                title: translations?.no ??
-                                    language(context, appFonts.no),
-                                borderColor: appColor(context).primary,
-                                color: appColor(context).whiteBg,
-                                style: appCss.dmDenseSemiBold16
-                                    .textColor(appColor(context).primary))),
-                        const HSpace(Sizes.s15),
-                        Expanded(
-                            child: ButtonCommon(
-                                color: appColor(context).primary,
-                                onTap: () {
-                                  servicesCart!.selectedAdditionalServices!
-                                      .removeAt(index);
-                                  notifyListeners();
-                                  route.pop(context);
-                                },
-                                style: appCss.dmDenseSemiBold16
-                                    .textColor(appColor(context).whiteColor),
-                                title: translations?.yes ??
-                                    language(context, appFonts.yes)))
-                      ])
-                    ]).padding(
+                                              duration: const Duration(
+                                                milliseconds: 200,
+                                              ),
+                                              height: 40,
+                                              child: Image.asset(
+                                                eImageAssets.removeAddOn,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        Image.asset(
+                                          eImageAssets.dustbin,
+                                          height: Sizes.s88,
+                                          width: Sizes.s88,
+                                        ).paddingOnly(bottom: Insets.i24),
+                                      ],
+                                    ),
+                                  ).decorated(
+                                    color: appColor(context).fieldCardBg,
+                                    borderRadius: BorderRadius.circular(
+                                      AppRadius.r10,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (offsetAnimation != null)
+                                SlideTransition(
+                                  position: offsetAnimation!,
+                                  child:
+                                      (offsetAnimation != null &&
+                                          isAnimateOver == true)
+                                      ? Image.asset(
+                                          eImageAssets.dustbinCover,
+                                          height: 38,
+                                        )
+                                      : const SizedBox(),
+                                ),
+                            ],
+                          ),
+                          // Sub text
+                          const VSpace(Sizes.s15),
+                          Text(
+                            language(context, translations!.removeAddOnsDes),
+                            textAlign: TextAlign.center,
+                            style: appCss.dmDenseRegular14
+                                .textColor(appColor(context).lightText)
+                                .textHeight(1.6),
+                          ).paddingSymmetric(horizontal: Sizes.s56),
+                          const VSpace(Sizes.s25),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ButtonCommon(
+                                  onTap: () => route.pop(context),
+                                  title:
+                                      translations?.no ??
+                                      language(context, appFonts.no),
+                                  borderColor: appColor(context).primary,
+                                  color: appColor(context).whiteBg,
+                                  style: appCss.dmDenseSemiBold16.textColor(
+                                    appColor(context).primary,
+                                  ),
+                                ),
+                              ),
+                              const HSpace(Sizes.s15),
+                              Expanded(
+                                child: ButtonCommon(
+                                  color: appColor(context).primary,
+                                  onTap: () {
+                                    servicesCart!.selectedAdditionalServices!
+                                        .removeAt(index);
+                                    notifyListeners();
+                                    route.pop(context);
+                                  },
+                                  style: appCss.dmDenseSemiBold16.textColor(
+                                    appColor(context).whiteColor,
+                                  ),
+                                  title:
+                                      translations?.yes ??
+                                      language(context, appFonts.yes),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ).padding(
                         horizontal: Insets.i20,
                         top: Insets.i60,
-                        bottom: Insets.i20),
-                    Row(
+                        bottom: Insets.i20,
+                      ),
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           // Title
-                          Text(language(context, translations!.removeAddOns),
-                              style: appCss.dmDenseExtraBold18
-                                  .textColor(appColor(context).darkText)),
-                          Icon(CupertinoIcons.multiply,
-                                  size: Sizes.s20,
-                                  color: appColor(context).darkText)
-                              .inkWell(onTap: () => route.pop(context))
-                        ]).paddingAll(Insets.i20)
-                  ]));
-            });
-          });
-        }).then((value) {
+                          Text(
+                            language(context, translations!.removeAddOns),
+                            style: appCss.dmDenseExtraBold18.textColor(
+                              appColor(context).darkText,
+                            ),
+                          ),
+                          Icon(
+                            CupertinoIcons.multiply,
+                            size: Sizes.s20,
+                            color: appColor(context).darkText,
+                          ).inkWell(onTap: () => route.pop(context)),
+                        ],
+                      ).paddingAll(Insets.i20),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    ).then((value) {
       isPositionedRight = false;
       isAnimateOver = false;
       notifyListeners();
@@ -477,24 +591,35 @@ class SlotBookingProvider with ChangeNotifier {
   }
 
   animateDesign(TickerProvider sync) {
-    Future.delayed(DurationClass.s1).then((value) {
-      isPositionedRight = true;
-      notifyListeners();
-    }).then((value) {
-      Future.delayed(DurationClass.ms150).then((value) {
-        isAnimateOver = true;
-        notifyListeners();
-      }).then((value) {
-        controller = AnimationController(
-            vsync: sync, duration: const Duration(seconds: 2))
-          ..forward();
-        offsetAnimation = Tween<Offset>(
-                begin: const Offset(0, 0.5), end: const Offset(0, 1.6))
-            .animate(
-                CurvedAnimation(parent: controller!, curve: Curves.elasticOut));
-        notifyListeners();
-      });
-    });
+    Future.delayed(DurationClass.s1)
+        .then((value) {
+          isPositionedRight = true;
+          notifyListeners();
+        })
+        .then((value) {
+          Future.delayed(DurationClass.ms150)
+              .then((value) {
+                isAnimateOver = true;
+                notifyListeners();
+              })
+              .then((value) {
+                controller = AnimationController(
+                  vsync: sync,
+                  duration: const Duration(seconds: 2),
+                )..forward();
+                offsetAnimation =
+                    Tween<Offset>(
+                      begin: const Offset(0, 0.5),
+                      end: const Offset(0, 1.6),
+                    ).animate(
+                      CurvedAnimation(
+                        parent: controller!,
+                        curve: Curves.elasticOut,
+                      ),
+                    );
+                notifyListeners();
+              });
+        });
 
     notifyListeners();
   }
@@ -503,76 +628,137 @@ class SlotBookingProvider with ChangeNotifier {
   List? selectedAddons;
   Future<void> onTapNext(BuildContext context) async {
     isNextLoading = true;
+
     notifyListeners();
 
-    // Check Service Availability in Zone
+    /// CHECK SERVICE AVAILABILITY
+
     bool isAvailable = await checkServiceAvailability(context);
+
     if (!isAvailable) {
       isNextLoading = false;
+
       notifyListeners();
+
       return;
     }
 
-    servicesCart!.selectedServiceMan = null;
+    /// RESET SERVICEMAN
 
-    bool isScheduled = servicesCart?.type == 'scheduled' ||
-        servicesCart?.type == 'schedule';
+    if (servicesCart != null) {
+      servicesCart!.selectedServiceMan = null;
+    }
+
+    /// CHECK DATE SELECTION
+
+    bool isScheduled =
+        servicesCart?.type == 'scheduled' || servicesCart?.type == 'schedule';
+
     bool isDateSelected = isScheduled
         ? selectedDateList.isNotEmpty
         : servicesCart?.serviceDate != null;
 
     if (!isDateSelected) {
       isNextLoading = false;
+
       notifyListeners();
+
       Fluttertoast.showToast(
-          msg: "Please Select the Date & Time Slot",
-          backgroundColor: Colors.red);
+        msg: "Please Select the Date & Time Slot",
+
+        backgroundColor: Colors.red,
+      );
+
       return;
     }
 
+    /// PACKAGE FLOW
+
     if (isPackage) {
       log("selectProviderIndex :$selectProviderIndex");
+
       servicePackageList[selectProviderIndex] = servicesCart!;
+
       servicePackageList[selectProviderIndex].selectedServiceNote =
           txtNote.text;
 
       servicesCart!.serviceDate = focusedDay.value;
-      servicesCart!.selectedDateTimeFormat =
-          DateFormat("aa").format(focusedDay.value);
+
+      servicesCart!.selectedDateTimeFormat = DateFormat(
+        "aa",
+      ).format(focusedDay.value);
+
       servicePackageList[selectProviderIndex].serviceDate = focusedDay.value;
+
       servicePackageList[selectProviderIndex].selectServiceManType =
           "app_choose";
 
       isNextLoading = false;
+
       notifyListeners();
+
       route.pop(context);
     } else {
+      /// LOCATION VALIDATION
+
       if (address == null) {
         isNextLoading = false;
+
         notifyListeners();
+
         Fluttertoast.showToast(
-            msg: "Please Select the Location",
-            backgroundColor: Colors.red);
+          msg: "Please Select the Location",
+
+          backgroundColor: Colors.red,
+        );
+
         return;
       }
 
-      callBookingApi(
-          servicesCart?.id,
-          servicesCart?.selectedRequiredServiceMan ??
-              servicesCart?.requiredServicemen ??
-              1,
-          servicesCart?.selectedAdditionalServices
-              ?.map((service) => {
-                    "id": service.id,
-                    "qty": service.qty,
-                  })
-              .toList());
+      /// SAVE NOTE
 
       servicesCart!.selectedServiceNote = txtNote.text;
+
+      /// SERVICE MAN TYPE
+
       servicesCart!.selectServiceManType = "app_choose";
+
+      /// DUMMY BOOKING DATA
+
+      Map<String, dynamic> bookingData = {
+        "location": currentAddress,
+
+        "date": servicesCart?.serviceDate.toString(),
+
+        "note": txtNote.text,
+
+        "serviceId": servicesCart?.id,
+
+        "providerId": servicesCart?.userId,
+      };
+
+      debugPrint("APPU_DEBUG BOOKING DATA => $bookingData");
+      servicesCart?.price = 299;
+
+      servicesCart?.requiredServicemen = 1;
+
+      servicesCart?.selectedRequiredServiceMan = 1;
+
+      servicesCart?.tax = "0";
+
+      debugPrint("APPU_DEBUG DUMMY PRICE SET");
+
       isStep2 = true;
+
+      debugPrint("APPU_DEBUG STEP2 OPENED");
+
+      /// STOP LOADING
+
       isNextLoading = false;
+
       notifyListeners();
+
+      debugPrint("APPU_DEBUG REDIRECT TO PENDING BOOKING");
     }
   }
 
@@ -585,57 +771,76 @@ class SlotBookingProvider with ChangeNotifier {
   void onAmPmChange(BuildContext context, int index) {
     scrollDayIndex = index;
     amIndex = index;
+    _selectedPeriod = amPmList[index]; // Period string sync kiye rakhne ke liye
     notifyListeners();
     filterSlotByAmPm(context);
   }
 
   Future<void> filterSlotByAmPm(BuildContext context) async {
     showLoading(context);
-    // timeSlot.clear();
     notifyListeners();
 
-    if (timeSlotModel?.timeSlots == null) {
-      hideLoading(context);
-      return;
-    }
+    try {
+      if (timeSlotModel?.timeSlots == null) {
+        hideLoading(context);
+        return;
+      }
 
-    String day = DateFormat('EEEE').format(focusedDay.value).toUpperCase();
-    List<TimeSlots> dayWeek = timeSlotModel!.timeSlots;
-    int index = dayWeek.indexWhere(
-        (element) => element.day.toLowerCase() == day.toLowerCase());
+      String day = DateFormat('EEEE').format(focusedDay.value).toUpperCase();
+      List<TimeSlots> dayWeek = timeSlotModel!.timeSlots;
+      int index = dayWeek.indexWhere(
+        (element) => element.day.toLowerCase() == day.toLowerCase(),
+      );
 
-    if (index >= 0 && dayWeek[index].isActive == "1") {
-      List<String> newTimeSlot = dayWeek[index].slots;
-      bool isToday = isSameDay(focusedDay.value, DateTime.now());
-      for (String slot in newTimeSlot) {
-        int hour = int.parse(slot.split(":")[0]);
-        // Filter for AM/PM
-        if (scrollDayIndex == 0 && hour < 12) {
-          // AM: Include slots before 12:00 PM
-          timeSlot.add(slot);
-          log("timeSlot:::$timeSlot");
-        } else if (scrollDayIndex == 1 && hour >= 12) {
-          // PM: Include slots from 12:00 PM onwards
-          timeSlot.add(slot);
-        }
-        // Restrict past times for today
-        if (isToday) {
-          int slotHour = hour;
-          int slotMinute = int.parse(slot.split(":")[1]);
-          DateTime now = DateTime.now();
-          if (scrollDayIndex == 0 && now.hour >= 12) {
-            timeSlot.remove(slot); // Remove AM slots if past noon
-          } else if (slotHour < now.hour ||
-              (slotHour == now.hour && slotMinute < now.minute)) {
-            timeSlot.remove(slot); // Remove past times
+      // Temporary list banayi taaki direct manipulation crash na kare
+      List<String> tempFilteredSlots = [];
+
+      if (index >= 0 && dayWeek[index].isActive == "1" ||
+          dayWeek[index].isActive == 1) {
+        List<dynamic> rawSlots = dayWeek[index].slots;
+        bool isToday = isSameDay(focusedDay.value, DateTime.now());
+        DateTime now = DateTime.now();
+
+        for (var rawSlot in rawSlots) {
+          String slot = rawSlot.toString();
+          List<String> parts = slot.split(":");
+          if (parts.length < 2) continue;
+
+          int hour = int.tryParse(parts[0]) ?? 0;
+          int slotMinute = int.tryParse(parts[1]) ?? 0;
+
+          // 1. AM/PM Basic Separation Filter
+          bool isAmSlot = hour < 12;
+          if (scrollDayIndex == 0 && !isAmSlot)
+            continue; // AM screen par PM data skip karo
+          if (scrollDayIndex == 1 && isAmSlot)
+            continue; // PM screen par AM data skip karo
+
+          // 2. Real-time Past Filter (Agar aaj ka din selected hai)
+          if (isToday) {
+            if (scrollDayIndex == 0 && now.hour >= 12) {
+              continue; // Agar dophar ke 12 baj chuke hain toh AM slots display mat karo
+            }
+            if (hour < now.hour ||
+                (hour == now.hour && slotMinute < now.minute)) {
+              continue; // Beeta hua time filter karke skip karo
+            }
           }
+
+          tempFilteredSlots.add(slot);
         }
       }
-    }
 
-    timeIndex = null;
-    hideLoading(context);
-    notifyListeners();
+      // Safe update assignment bina internal loop breaks ke
+      timeSlot = tempFilteredSlots;
+      timeIndex = null;
+    } catch (e) {
+      debugPrint("APPU_DEBUG_FILTER_CRASH => $e");
+    } finally {
+      // Kisi bhi haal me yahan loader band hoga hi hoga!
+      hideLoading(context);
+      notifyListeners();
+    }
   }
 
   onChangeLocation(context, PrimaryAddress primaryAddress) async {
@@ -643,8 +848,10 @@ class SlotBookingProvider with ChangeNotifier {
     await loc.getLocationList(context);
     address = primaryAddress;
     if (isPackage) {
-      final packageCtrl =
-          Provider.of<SelectServicemanProvider>(context, listen: false);
+      final packageCtrl = Provider.of<SelectServicemanProvider>(
+        context,
+        listen: false,
+      );
       servicePackageList[selectProviderIndex].primaryAddress = address;
       packageCtrl.notifyListeners();
     } else {
@@ -660,8 +867,8 @@ class SlotBookingProvider with ChangeNotifier {
       focusedDay.value = fDay;
       scrollDayIndex =
           isSameDay(selectDay, DateTime.now()) && DateTime.now().hour >= 12
-              ? 1
-              : 0;
+          ? 1
+          : 0;
       amIndex = scrollDayIndex;
       timeIndex = null;
       log(">>> onDaySelected: $selectDay");
@@ -676,14 +883,17 @@ class SlotBookingProvider with ChangeNotifier {
   }
 
   void onProviderDaySelected(
-      DateTime selectDay, DateTime fDay, BuildContext context) {
+    DateTime selectDay,
+    DateTime fDay,
+    BuildContext context,
+  ) {
     if (!isSameDay(selectedDay, selectDay)) {
       selectedDay = selectDay;
       focusedDay.value = fDay;
       scrollDayIndex =
           isSameDay(selectDay, DateTime.now()) && DateTime.now().hour >= 12
-              ? 1
-              : 0;
+          ? 1
+          : 0;
       amIndex = scrollDayIndex;
       timeIndex = null;
       // carouselController2.jumpToPage(scrollDayIndex);
@@ -704,65 +914,74 @@ class SlotBookingProvider with ChangeNotifier {
     servicesCart = service;
 
     DateTime now = DateTime.now();
-    DateTime fiveMinutesLater = now.add(const Duration(minutes: 5));
+    DateTime bufferTime = now.add(const Duration(minutes: 30));
     onDaySelect(focusedDay.value, focusedDay.value);
-    if (servicesCart?.serviceDate != null) {
-      // Use service date if provided
-      focusedDay.value = servicesCart!.serviceDate!;
-      selectedDay = servicesCart!.serviceDate;
 
-      // Convert hour to 12-hour format
-      int hour = servicesCart!.serviceDate!.hour;
-      int displayHour = hour % 12 == 0 ? 12 : hour % 12;
-      scrollHourIndex = appArray.hourList
-          .indexWhere((element) => element == displayHour.toString());
+    DateTime timeToAssign = (servicesCart?.serviceDate != null)
+        ? servicesCart!.serviceDate!
+        : bufferTime;
 
-      // Set minute
-      scrollMinIndex = appArray.minList.indexWhere((element) =>
-          element ==
-          servicesCart!.serviceDate!.minute.toString().padLeft(2, '0'));
+    focusedDay.value = timeToAssign;
+    selectedDay = timeToAssign;
 
-      // Set AM/PM
-      amIndex = servicesCart!.selectedDateTimeFormat == "AM" ? 1 : 0;
-      scrollDayIndex = amIndex!;
-    } else {
-      // fetchSlotTime(context); // Commented: Do not call provider-time-slot on sheet open
-      // Set to current time + 5 minutes
-      focusedDay.value = fiveMinutesLater;
-      selectedDay = fiveMinutesLater;
-      // Convert hour to 12-hour format
-      int hour = fiveMinutesLater.hour;
-      int displayHour = hour % 12 == 0 ? 12 : hour % 12;
-      scrollHourIndex = appArray.hourList
-          .indexWhere((element) => element == displayHour.toString());
+    int currentRawHour = timeToAssign.hour;
+    int displayHour = currentRawHour % 12 == 0 ? 12 : currentRawHour % 12;
+    String rawPeriod = currentRawHour >= 12 ? "PM" : "AM";
+    String minuteString = timeToAssign.minute.toString().padLeft(2, '0');
+    String hourString = displayHour.toString().padLeft(2, '0');
 
-      // Set minute
-      scrollMinIndex = appArray.minList.indexWhere((element) =>
-          element == fiveMinutesLater.minute.toString().padLeft(2, '0'));
-      scrollDayIndex = fiveMinutesLater.hour >= 12 ? 0 : 1;
-      // Set AM/PM
-      amIndex = fiveMinutesLater.hour >= 12 ? 0 : 1;
-    }
-    // Jump to initial positions
-    carouselController.jumpToPage(scrollHourIndex);
-    carouselController1.jumpToPage(scrollMinIndex);
-    carouselController2.jumpToPage(scrollDayIndex ?? 0);
-    // Handle case where hour or minute not found in lists
+    _selectedHour = hourString;
+
+    _selectedMinute = minuteString;
+    _selectedPeriod = rawPeriod;
+    slotChosenValue = "$_selectedHour:$_selectedMinute $_selectedPeriod";
+
+    // Safe lookup structure framework
+    var hoursSource = hourList;
+    var minutesSource = minuteList;
+
+    scrollHourIndex = hoursSource.indexWhere(
+      (element) => int.tryParse(element) == displayHour,
+    );
+    scrollMinIndex = minutesSource.indexWhere(
+      (element) => element == minuteString,
+    );
+
+    amIndex = rawPeriod == "PM" ? 1 : 0;
+    scrollDayIndex = amIndex!;
+
     if (scrollHourIndex == -1) scrollHourIndex = 0;
     if (scrollMinIndex == -1) scrollMinIndex = 0;
 
-    // Initialize month dropdown
-    int monthIndex = appArray.monthList
-        .indexWhere((element) => element['index'] == focusedDay.value.month);
-    chosenValue = appArray.monthList[monthIndex];
+    // Frame complete hone ke baad carousel slots jump kar jayenge safely
+    // Frame completely render hone ke baad 200ms rukenge taaki
+    // BottomSheet ke andar ke Carousels safely attach ho sakein
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 200), () {
+        try {
+          hourController.jumpToPage(scrollHourIndex);
+          minuteController.jumpToPage(scrollMinIndex);
+          amPmController.jumpToPage(scrollDayIndex);
+          debugPrint("APPU_DEBUG_CAROUSEL => Carousels jumped successfully!");
+        } catch (e) {
+          debugPrint("APPU_DEBUG_CAROUSEL_ERROR => Catch handled safely: $e");
+        }
+      });
+    });
 
-    // Set calendar format based on service type
-    // Week view for normal bookings (compact), month view for scheduled bookings
+    try {
+      int monthIndex = appArray.monthList.indexWhere(
+        (element) => element['index'] == focusedDay.value.month,
+      );
+      if (monthIndex != -1) {
+        chosenValue = appArray.monthList[monthIndex];
+      }
+    } catch (_) {}
+
     calendarFormat = servicesCart?.type == 'scheduled'
         ? CalendarFormat.month
         : CalendarFormat.week;
 
-    // await fetchSlotTime(context); // Commented: Do not call provider-time-slot on sheet open
     notifyListeners();
   }
 
@@ -821,8 +1040,10 @@ class SlotBookingProvider with ChangeNotifier {
     }
   }
 
-  Future<void> checkSlotAvailable(
-      {bool isEdit = false, BuildContext? context}) async {
+  Future<void> checkSlotAvailable({
+    bool isEdit = false,
+    BuildContext? context,
+  }) async {
     if (context == null ||
         servicesCart?.user?.id == null ||
         timeIndex == null ||
@@ -830,7 +1051,9 @@ class SlotBookingProvider with ChangeNotifier {
       timeIndex = null;
       if (context != null) {
         Fluttertoast.showToast(
-            msg: "Please select a time slot", backgroundColor: Colors.red);
+          msg: "Please select a time slot",
+          backgroundColor: Colors.red,
+        );
       }
       notifyListeners();
       return;
@@ -867,25 +1090,29 @@ class SlotBookingProvider with ChangeNotifier {
           timeIndex = null;
           availableProviders = [];
           Fluttertoast.showToast(
-              msg: response.message.isNotEmpty
-                  ? response.message
-                  : "Slot not available",
-              backgroundColor: Colors.red);
+            msg: response.message.isNotEmpty
+                ? response.message
+                : "Slot not available",
+            backgroundColor: Colors.red,
+          );
         }
       } else {
         timeIndex = null;
         availableProviders = [];
         Fluttertoast.showToast(
-            msg: response.message.isNotEmpty
-                ? response.message
-                : "Slot not available",
-            backgroundColor: Colors.red);
+          msg: response.message.isNotEmpty
+              ? response.message
+              : "Slot not available",
+          backgroundColor: Colors.red,
+        );
       }
     } catch (e) {
       log("Error checking slot: $e");
       timeIndex = null;
       Fluttertoast.showToast(
-          msg: "Error validating slot", backgroundColor: Colors.red);
+        msg: "Error validating slot",
+        backgroundColor: Colors.red,
+      );
     } finally {
       hideLoading(context);
       notifyListeners();
@@ -909,8 +1136,9 @@ class SlotBookingProvider with ChangeNotifier {
         isLoading = false;
         hideLoading(context);
         Fluttertoast.showToast(
-            msg: "Invalid AM/PM selection. Please try again.",
-            backgroundColor: Colors.red);
+          msg: "Invalid AM/PM selection. Please try again.",
+          backgroundColor: Colors.red,
+        );
         notifyListeners();
         return;
       }
@@ -926,7 +1154,7 @@ class SlotBookingProvider with ChangeNotifier {
         hour = 12; // Convert 12 PM to noon
       }
 
-// Construct selected DateTime in local time
+      // Construct selected DateTime in local time
       final selectedDateTime = DateTime(
         focusedDay.value.year,
         focusedDay.value.month,
@@ -935,21 +1163,27 @@ class SlotBookingProvider with ChangeNotifier {
         int.parse(appArray.minList[scrollMinIndex]),
       );
 
-// Debugging log
-      log("Selected DateTime: $selectedDateTime, AM/PM: $amPm, Hour: $hour, Minute: ${appArray.minList[scrollMinIndex]}");
+      // Debugging log
+      log(
+        "Selected DateTime: $selectedDateTime, AM/PM: $amPm, Hour: $hour, Minute: ${appArray.minList[scrollMinIndex]}",
+      );
 
-// Get current time for validation (local time)
+      // Get current time for validation (local time)
       final now = DateTime.now();
-      final minAllowedTime = now
-          .add(const Duration(minutes: 5)); // Minimum 5 minutes from now
+      final minAllowedTime = now.add(
+        const Duration(minutes: 5),
+      ); // Minimum 5 minutes from now
 
-// Debugging log for validation
+      // Debugging log for validation
       log("Current Time: $now, Min Allowed Time: $minAllowedTime");
 
-// Validation 1: Check for current date
+      // Validation 1: Check for current date
       final today = DateTime(now.year, now.month, now.day);
       final selectedDate = DateTime(
-          selectedDateTime.year, selectedDateTime.month, selectedDateTime.day);
+        selectedDateTime.year,
+        selectedDateTime.month,
+        selectedDateTime.day,
+      );
       if (selectedDate.isAtSameMomentAs(today)) {
         // Validation 2: Prevent past, current, or within 5-minute time on current date
         if (selectedDateTime.isBefore(minAllowedTime) ||
@@ -957,18 +1191,19 @@ class SlotBookingProvider with ChangeNotifier {
           isLoading = false;
           hideLoading(context);
           Fluttertoast.showToast(
-              backgroundColor: Colors.red,
-              msg:
-                  "Please select a time at least 5 minutes from now on the current date.");
+            backgroundColor: Colors.red,
+            msg:
+                "Please select a time at least 5 minutes from now on the current date.",
+          );
           notifyListeners();
           return;
         }
       }
 
-// Update focusedDay.value with validated time
+      // Update focusedDay.value with validated time
       focusedDay.value = selectedDateTime;
 
-// Prepare API data
+      // Prepare API data
       final pref = await SharedPreferences.getInstance();
       String? zoneIds = pref.getString(session.zoneIds);
       var data = {
@@ -979,34 +1214,37 @@ class SlotBookingProvider with ChangeNotifier {
             "${DateFormat("dd-MMM-yyy,hh:mm").format(focusedDay.value)} ${amPm.toLowerCase()}",
       };
 
-// Debugging log
+      // Debugging log
       log("API Data: $data");
 
-// Make API call to check time slot availability
+      // Make API call to check time slot availability
       await apiServices
           .getApi(api.isValidTimeSlot, data, isData: true, isToken: true)
           .then((value) async {
-        hideLoading(context);
-        if (value.isSuccess!) {
-          isValidTimeSlotModel = IsValidTimeSlotModel.fromJson(value.data);
-          if (isValidTimeSlotModel?.isValidTimeSlot == true) {
-            availableProviders = isValidTimeSlotModel?.data ?? [];
-            dateTimeSelect(context, isService, isEdit: isEdit);
-          } else {
-            timeIndex = null;
-            timeSlot = [];
-            availableProviders = [];
-            Fluttertoast.showToast(
-                msg: value.message, backgroundColor: Colors.red);
-          }
-        }
-      });
+            hideLoading(context);
+            if (value.isSuccess!) {
+              isValidTimeSlotModel = IsValidTimeSlotModel.fromJson(value.data);
+              if (isValidTimeSlotModel?.isValidTimeSlot == true) {
+                availableProviders = isValidTimeSlotModel?.data ?? [];
+                dateTimeSelect(context, isService, isEdit: isEdit);
+              } else {
+                timeIndex = null;
+                timeSlot = [];
+                availableProviders = [];
+                Fluttertoast.showToast(
+                  msg: value.message,
+                  backgroundColor: Colors.red,
+                );
+              }
+            }
+          });
     } catch (e) {
       log("Error: $e");
       hideLoading(context);
       Fluttertoast.showToast(
-          msg: "An error occurred. Please try again.",
-          backgroundColor: Colors.red);
+        msg: "An error occurred. Please try again.",
+        backgroundColor: Colors.red,
+      );
     }
 
     isLoading = false;
@@ -1054,18 +1292,26 @@ class SlotBookingProvider with ChangeNotifier {
     int index = choseVal['index'];
     log("chosenValue : $index");
 
-    DateTime now =
-        DateTime.utc(focusedDay.value.year, index, focusedDay.value.day);
+    DateTime now = DateTime.utc(
+      focusedDay.value.year,
+      index,
+      focusedDay.value.day,
+    );
     log("HHHHHHH :$now ${focusedDay.value}");
-    log("HHHHHHH :$now ${now.isAfter(focusedDay.value) || DateFormat('MMMM-yyyy').format(now) == DateFormat('MMMM-yyyy').format(focusedDay.value)}");
+    log(
+      "HHHHHHH :$now ${now.isAfter(focusedDay.value) || DateFormat('MMMM-yyyy').format(now) == DateFormat('MMMM-yyyy').format(focusedDay.value)}",
+    );
     if (now.isAfter(DateTime.now()) ||
         DateFormat('MMMM-yyyy').format(now) ==
             DateFormat('MMMM-yyyy').format(focusedDay.value)) {
       chosenValue = choseVal;
 
       notifyListeners();
-      focusedDay.value =
-          DateTime.utc(focusedDay.value.year, index, focusedDay.value.day + 0);
+      focusedDay.value = DateTime.utc(
+        focusedDay.value.year,
+        index,
+        focusedDay.value.day + 0,
+      );
       onDaySelected(focusedDay.value, focusedDay.value, context);
       log("choseVal : $choseVal");
       String day = DateFormat('EEEE').format(focusedDay.value);
@@ -1073,7 +1319,8 @@ class SlotBookingProvider with ChangeNotifier {
       if (timeSlotModel != null) {
         List<TimeSlots> dayWeek = timeSlotModel!.timeSlots;
         int listIndex = dayWeek.indexWhere(
-            (element) => element.day.toLowerCase() == day.toLowerCase());
+          (element) => element.day.toLowerCase() == day.toLowerCase(),
+        );
 
         if (listIndex >= 0) {
           if (dayWeek[listIndex].isActive == 1) {
@@ -1091,14 +1338,18 @@ class SlotBookingProvider with ChangeNotifier {
       if (DateFormat('MMMM-yyyy').format(now) ==
           DateFormat('MMMM-yyyy').format(DateTime.now())) {
         focusedDay.value = DateTime.utc(
-            focusedDay.value.year, index, focusedDay.value.day + 0);
+          focusedDay.value.year,
+          index,
+          focusedDay.value.day + 0,
+        );
         onDaySelected(focusedDay.value, focusedDay.value, context);
         log("choseVal : $choseVal");
         String day = DateFormat('EEEE').format(focusedDay.value);
         if (timeSlotModel != null) {
           List<TimeSlots> dayWeek = timeSlotModel!.timeSlots;
           int listIndex = dayWeek.indexWhere(
-              (element) => element.day.toLowerCase() == day.toLowerCase());
+            (element) => element.day.toLowerCase() == day.toLowerCase(),
+          );
 
           if (listIndex >= 0) {
             if (dayWeek[listIndex].isActive == 1) {
@@ -1135,7 +1386,7 @@ class SlotBookingProvider with ChangeNotifier {
     notifyListeners();
   }
 
-// Updated onHourTap method
+  // Updated onHourTap method
   void onHourTap(BuildContext context) async {
     final TimeOfDay? time = await showTimePicker(
       context: context,
@@ -1159,16 +1410,20 @@ class SlotBookingProvider with ChangeNotifier {
               entryModeIconColor: appColor(context).primary,
               helpTextStyle: TextStyle(color: appColor(context).whiteBg),
               cancelButtonStyle: ButtonStyle(
-                backgroundColor:
-                    MaterialStateProperty.all<Color>(appColor(context).primary),
-                foregroundColor:
-                    MaterialStateProperty.all<Color>(appColor(context).whiteBg),
+                backgroundColor: MaterialStateProperty.all<Color>(
+                  appColor(context).primary,
+                ),
+                foregroundColor: MaterialStateProperty.all<Color>(
+                  appColor(context).whiteBg,
+                ),
               ),
               confirmButtonStyle: ButtonStyle(
-                backgroundColor:
-                    MaterialStateProperty.all<Color>(appColor(context).primary),
-                foregroundColor:
-                    MaterialStateProperty.all<Color>(appColor(context).whiteBg),
+                backgroundColor: MaterialStateProperty.all<Color>(
+                  appColor(context).primary,
+                ),
+                foregroundColor: MaterialStateProperty.all<Color>(
+                  appColor(context).whiteBg,
+                ),
               ),
               hourMinuteTextStyle: const TextStyle(fontSize: 30),
             ),
@@ -1184,14 +1439,16 @@ class SlotBookingProvider with ChangeNotifier {
       if (hour == 0) hour = 12; // Handle midnight/noon
 
       // Set scrollHourIndex
-      scrollHourIndex =
-          appArray.hourList.indexWhere((element) => element == hour.toString());
+      scrollHourIndex = appArray.hourList.indexWhere(
+        (element) => element == hour.toString(),
+      );
       if (scrollHourIndex == -1) scrollHourIndex = 0; // Fallback
 
       // Set minute
       String paddedMinute = time.minute.toString().padLeft(2, '0');
-      scrollMinIndex =
-          appArray.minList.indexWhere((element) => element == paddedMinute);
+      scrollMinIndex = appArray.minList.indexWhere(
+        (element) => element == paddedMinute,
+      );
       if (scrollMinIndex == -1) scrollMinIndex = 0; // Fallback
 
       // Set AM/PM
@@ -1237,18 +1494,24 @@ class SlotBookingProvider with ChangeNotifier {
     if (DateFormat('MM-yyyy').format(focusedDay.value) !=
         DateFormat('MM-yyyy').format(now)) {
       pageController.previousPage(
-          duration: const Duration(microseconds: 200), curve: Curves.bounceIn);
+        duration: const Duration(microseconds: 200),
+        curve: Curves.bounceIn,
+      );
       final newMonth = DateTime(
         focusedDay.value.year,
         focusedDay.value.month - 1,
         1, // First day of previous month
       );
       focusedDay.value = newMonth;
-      int index = appArray.monthList
-          .indexWhere((element) => element['index'] == focusedDay.value.month);
+      int index = appArray.monthList.indexWhere(
+        (element) => element['index'] == focusedDay.value.month,
+      );
       chosenValue = appArray.monthList[index];
-      selectedYear = DateTime.utc(focusedDay.value.year, focusedDay.value.month,
-          focusedDay.value.day + 0);
+      selectedYear = DateTime.utc(
+        focusedDay.value.year,
+        focusedDay.value.month,
+        focusedDay.value.day + 0,
+      );
       notifyListeners();
     } else {
       isVisible = true;
@@ -1263,18 +1526,24 @@ class SlotBookingProvider with ChangeNotifier {
 
   onRightArrow() {
     pageController.nextPage(
-        duration: const Duration(microseconds: 200), curve: Curves.bounceIn);
+      duration: const Duration(microseconds: 200),
+      curve: Curves.bounceIn,
+    );
     final newMonth = DateTime(
       focusedDay.value.year,
       focusedDay.value.month + 1,
       1, // First day of next month
     );
     focusedDay.value = newMonth;
-    int index = appArray.monthList
-        .indexWhere((element) => element['index'] == focusedDay.value.month);
+    int index = appArray.monthList.indexWhere(
+      (element) => element['index'] == focusedDay.value.month,
+    );
     chosenValue = appArray.monthList[index];
-    selectedYear = DateTime.utc(focusedDay.value.year, focusedDay.value.month,
-        focusedDay.value.day + 0);
+    selectedYear = DateTime.utc(
+      focusedDay.value.year,
+      focusedDay.value.month,
+      focusedDay.value.day + 0,
+    );
     notifyListeners();
     log("hbfbfdbf::::::$newMonth");
   }
@@ -1306,8 +1575,9 @@ class SlotBookingProvider with ChangeNotifier {
     isStep2 = false; // Always reset to step 1
 
     try {
-      final Map<String, dynamic>? data = (argData ??
-          ModalRoute.of(context)?.settings.arguments) as Map<String, dynamic>?;
+      final Map<String, dynamic>? data =
+          (argData ?? ModalRoute.of(context)?.settings.arguments)
+              as Map<String, dynamic>?;
 
       if (data == null) {
         log("Error: SlotBookingProvider.onReady received null arguments");
@@ -1336,8 +1606,10 @@ class SlotBookingProvider with ChangeNotifier {
         try {
           scrollController.addListener(listen);
 
-          final locationCtrl =
-              Provider.of<LocationProvider>(context, listen: false);
+          final locationCtrl = Provider.of<LocationProvider>(
+            context,
+            listen: false,
+          );
 
           if (locationCtrl.addressList.isNotEmpty) {
             address = locationCtrl.addressList.firstWhere(
@@ -1350,16 +1622,28 @@ class SlotBookingProvider with ChangeNotifier {
             if (servicePackageList.length > selectProviderIndex) {
               servicePackageList[selectProviderIndex].primaryAddress = address;
             }
-            Provider.of<SelectServicemanProvider>(context, listen: false)
-                .notifyListeners();
+            Provider.of<SelectServicemanProvider>(
+              context,
+              listen: false,
+            ).notifyListeners();
           } else {
             servicesCart!.primaryAddress = address;
           }
 
           final dateTime = DateTime.now();
+          selectedHour =
+              (dateTime.hour > 12 ? dateTime.hour - 12 : dateTime.hour)
+                  .toString()
+                  .padLeft(2, '0');
+
+          selectedMinute = dateTime.minute.toString().padLeft(2, '0');
+
+          selectedPeriod = dateTime.hour >= 12 ? "PM" : "AM";
+          selectAmPm = dateTime.hour >= 12 ? 1 : 0;
           if (appArray.monthList.isNotEmpty) {
-            final index = appArray.monthList
-                .indexWhere((e) => e['index'] == dateTime.month);
+            final index = appArray.monthList.indexWhere(
+              (e) => e['index'] == dateTime.month,
+            );
             chosenValue = index >= 0
                 ? appArray.monthList[index]
                 : appArray.monthList.first;
@@ -1376,10 +1660,18 @@ class SlotBookingProvider with ChangeNotifier {
     }
   }
 
+  void onAmpmTap(int index) {
+    selectAmPm = index;
+    selectedPeriod = appArray.amPmList[index];
+    notifyListeners();
+  }
+
   setAddress(context) {
     if (isPackage) {
-      final packageCtrl =
-          Provider.of<SelectServicemanProvider>(context, listen: false);
+      final packageCtrl = Provider.of<SelectServicemanProvider>(
+        context,
+        listen: false,
+      );
       servicePackageList[selectProviderIndex].primaryAddress = address;
       packageCtrl.notifyListeners();
       notifyListeners();
@@ -1405,6 +1697,27 @@ class SlotBookingProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void saveSlotDateTime() {
+    if (selectedDay == null) {
+      return;
+    }
+
+    slotChosenValue =
+        "${selectedDay!.day.toString().padLeft(2, '0')}/"
+        "${selectedDay!.month.toString().padLeft(2, '0')}/"
+        "${selectedDay!.year} "
+        "$selectedHour:"
+        "$selectedMinute "
+        "$selectedPeriod";
+
+    debugPrint(
+      "APPU_DEBUG_SLOT => "
+      "$slotChosenValue",
+    );
+
+    notifyListeners();
+  }
+
   onDateTimeSelect(context, index) {
     selectIndex = index;
     notifyListeners();
@@ -1415,16 +1728,17 @@ class SlotBookingProvider with ChangeNotifier {
 
     if (selectIndex == 0) {
       showModalBottomSheet(
-          isScrollControlled: true,
-          context: context,
-          builder: (BuildContext context3) {
-            return DateTimePicker(
-              isWeek: false,
-              isService: isPackage,
-              selectProviderIndex: selectProviderIndex,
-              service: servicesCart,
-            );
-          }).then((value) {
+        isScrollControlled: true,
+        context: context,
+        builder: (BuildContext context3) {
+          return DateTimePicker(
+            isWeek: false,
+            isService: isPackage,
+            selectProviderIndex: selectProviderIndex,
+            service: servicesCart,
+          );
+        },
+      ).then((value) {
         log("VVVS :#$value");
         if (value != null) {
           if (value is DateTime) {
@@ -1443,8 +1757,10 @@ class SlotBookingProvider with ChangeNotifier {
             scrollDayIndex = amIndex ?? 1;
           }
           if (isPackage) {
-            final packageCtrl =
-                Provider.of<SelectServicemanProvider>(context, listen: false);
+            final packageCtrl = Provider.of<SelectServicemanProvider>(
+              context,
+              listen: false,
+            );
             if (servicePackageList.isNotEmpty) {
               servicePackageList[selectProviderIndex].serviceDate =
                   servicesCart!.serviceDate;
@@ -1463,19 +1779,20 @@ class SlotBookingProvider with ChangeNotifier {
     } else {
       await fetchSlotTime(context);
       showModalBottomSheet(
-          isScrollControlled: true,
-          context: context,
-          builder: (BuildContext context3) {
-            return Consumer<SlotBookingProvider>(
-                builder: (context1, value, child) {
-              return StatefulBuilder(builder: (context2, setState) {
-                return ProviderTimeSlotLayout(
-                    isService: isPackage,
-                    selectProviderIndex: selectProviderIndex,
-                    service: servicesCart);
-              });
-            });
-          }).then((value) {
+        isScrollControlled: true,
+        context: context,
+        builder: (BuildContext context3) {
+          return Consumer<SlotBookingProvider>(
+            builder: (context1, value, child) {
+              return StatefulBuilder(
+                builder: (context2, setState) {
+                  return CustomDateBottomSheet();
+                },
+              );
+            },
+          );
+        },
+      ).then((value) {
         log("VVVS : $value");
         if (value == null) {
           focusedDay.value = DateTime.now();
@@ -1487,8 +1804,10 @@ class SlotBookingProvider with ChangeNotifier {
         timeSlot = [];
         notifyListeners();
         if (isPackage) {
-          final packageCtrl =
-              Provider.of<SelectServicemanProvider>(context, listen: false);
+          final packageCtrl = Provider.of<SelectServicemanProvider>(
+            context,
+            listen: false,
+          );
           if (servicePackageList.isNotEmpty) {
             servicePackageList[selectProviderIndex] = servicesCart!;
             servicePackageList[selectProviderIndex].serviceDate =
@@ -1501,7 +1820,9 @@ class SlotBookingProvider with ChangeNotifier {
           notifyListeners();
           packageCtrl.notifyListeners();
           if (servicePackageList.isNotEmpty) {
-            log("packageCtrl.servicePackageList[selectProviderIndex].serviceDate :${servicePackageList[selectProviderIndex].serviceDate}");
+            log(
+              "packageCtrl.servicePackageList[selectProviderIndex].serviceDate :${servicePackageList[selectProviderIndex].serviceDate}",
+            );
           }
         }
       });
@@ -1511,8 +1832,9 @@ class SlotBookingProvider with ChangeNotifier {
 
   String getWeekday(String rawDate) {
     try {
-      final parsedDate =
-          DateTime.parse(rawDate); // Make sure date is "yyyy-MM-dd"
+      final parsedDate = DateTime.parse(
+        rawDate,
+      ); // Make sure date is "yyyy-MM-dd"
       return DateFormat('E').format(parsedDate); // Output: Mon, Tue, etc.
     } catch (e) {
       return rawDate; // fallback if format fails
@@ -1527,17 +1849,22 @@ class SlotBookingProvider with ChangeNotifier {
     notifyListeners();
 
     if (isEdit) {
-      route.pop(context, arg: {
-        "date": focusedDay.value,
-        "time": appArray.amPmList[scrollDayIndex]
-      });
+      route.pop(
+        context,
+        arg: {
+          "date": focusedDay.value,
+          "time": appArray.amPmList[scrollDayIndex],
+        },
+      );
     } else {
       servicesCart!.serviceDate = focusedDay.value;
       servicesCart!.selectedDateTimeFormat = appArray.amPmList[scrollDayIndex];
       notifyListeners();
       if (isService) {
-        final packageCtrl =
-            Provider.of<SelectServicemanProvider>(context, listen: false);
+        final packageCtrl = Provider.of<SelectServicemanProvider>(
+          context,
+          listen: false,
+        );
         packageCtrl.notifyListeners();
       }
       log("isService: ${servicesCart!.selectedDateTimeFormat}");
@@ -1550,8 +1877,9 @@ class SlotBookingProvider with ChangeNotifier {
 
     if (timeIndex != null) {
       final selectedDate = selectedDay ?? focusedDay.value;
-      final selectedWeekday =
-          DateFormat('EEEE').format(selectedDate).toUpperCase();
+      final selectedWeekday = DateFormat(
+        'EEEE',
+      ).format(selectedDate).toUpperCase();
 
       // Match the day slot
       final matchedDaySlot = timeSlotModel!.timeSlots.firstWhere(
@@ -1579,16 +1907,19 @@ class SlotBookingProvider with ChangeNotifier {
       );
 
       servicesCart!.serviceDate = focusedDay.value;
-      servicesCart!.selectedDateTimeFormat =
-          DateFormat("aa").format(focusedDay.value);
+      servicesCart!.selectedDateTimeFormat = DateFormat(
+        "aa",
+      ).format(focusedDay.value);
 
       notifyListeners();
 
       log("DOC: $isPackage ///${servicesCart!.serviceDate}");
 
       if (isPackage) {
-        final packageCtrl =
-            Provider.of<SelectServicemanProvider>(context, listen: false);
+        final packageCtrl = Provider.of<SelectServicemanProvider>(
+          context,
+          listen: false,
+        );
 
         servicePackageList[selectProviderIndex] = servicesCart!;
         servicePackageList[selectProviderIndex].serviceDate =
@@ -1605,7 +1936,9 @@ class SlotBookingProvider with ChangeNotifier {
       route.pop(context, arg: isPackage ? servicesCart : focusedDay.value);
     } else {
       Fluttertoast.showToast(
-          msg: "Please select time slot", backgroundColor: Colors.red);
+        msg: "Please select time slot",
+        backgroundColor: Colors.red,
+      );
     }
   }
 
@@ -1613,8 +1946,10 @@ class SlotBookingProvider with ChangeNotifier {
     String name = translations?.next ?? language(context, appFonts.next);
     log("isPackage ::$isPackage");
     if (isPackage) {
-      final packageCtrl =
-          Provider.of<SelectServicemanProvider>(context, listen: false);
+      final packageCtrl = Provider.of<SelectServicemanProvider>(
+        context,
+        listen: false,
+      );
       if (servicePackageList.length == 1) {
         name = translations?.submit ?? language(context, appFonts.submit);
         return name;
@@ -1646,8 +1981,10 @@ class SlotBookingProvider with ChangeNotifier {
       servicesCart!.serviceDate = null;
       servicesCart!.selectDateTimeOption = null;
       if (isPackage) {
-        final packageCtrl =
-            Provider.of<SelectServicemanProvider>(context, listen: false);
+        final packageCtrl = Provider.of<SelectServicemanProvider>(
+          context,
+          listen: false,
+        );
         servicePackageList[selectProviderIndex].serviceDate = null;
         servicePackageList[selectProviderIndex].selectDateTimeOption = null;
       }
@@ -1678,10 +2015,12 @@ class SlotBookingProvider with ChangeNotifier {
     Provider.of<CommonApiProvider>(context, listen: false).selfApi(context);
     final cartCtrl = Provider.of<CartProvider>(context, listen: false);
     log("SERVI :${servicesCart?.selectedAdditionalServices}");
-    int index = cartCtrl.cartList.indexWhere((element) =>
-        element.isPackage == false &&
-        element.serviceList != null &&
-        element.serviceList?.id == servicesCart?.id);
+    int index = cartCtrl.cartList.indexWhere(
+      (element) =>
+          element.isPackage == false &&
+          element.serviceList != null &&
+          element.serviceList?.id == servicesCart?.id,
+    );
     log("ADDD :${servicesCart?.primaryAddress}");
 
     if (index >= 0) {
@@ -1691,8 +2030,10 @@ class SlotBookingProvider with ChangeNotifier {
       cartCtrl.notifyListeners();
     } else {
       log("message is false");
-      CartModel cartModel =
-          CartModel(isPackage: false, serviceList: servicesCart);
+      CartModel cartModel = CartModel(
+        isPackage: false,
+        serviceList: servicesCart,
+      );
       cartCtrl.cartList.add(cartModel);
       cartCtrl.notifyListeners();
     }
@@ -1700,8 +2041,10 @@ class SlotBookingProvider with ChangeNotifier {
     cartCtrl.notifyListeners();
 
     if (cartCtrl.isEditing) {
-      CartModel updatedCartItem =
-          CartModel(isPackage: false, serviceList: servicesCart);
+      CartModel updatedCartItem = CartModel(
+        isPackage: false,
+        serviceList: servicesCart,
+      );
       await cartCtrl.updateCartItemApi(context, updatedCartItem);
     } else {
       cartCtrl.syncCartWithApi(context);
@@ -1711,10 +2054,14 @@ class SlotBookingProvider with ChangeNotifier {
     selectIndex = 0;
     txtNote.text = "";
     servicesCart = null;
-    final selectOption =
-        Provider.of<SelectServicemanProvider>(context, listen: false);
-    final providerDetail =
-        Provider.of<ProviderDetailsProvider>(context, listen: false);
+    final selectOption = Provider.of<SelectServicemanProvider>(
+      context,
+      listen: false,
+    );
+    final providerDetail = Provider.of<ProviderDetailsProvider>(
+      context,
+      listen: false,
+    );
     selectOption.servicePackageModel = null;
     providerDetail.selectProviderIndex = 0;
     providerDetail.selectIndex = 0;
@@ -1727,7 +2074,10 @@ class SlotBookingProvider with ChangeNotifier {
   Step2Model? step2Data;
 
   Future<void> callBookingApi(
-      int? serviceId, int? requiredServicemen, additionalServices) async {
+    int? serviceId,
+    int? requiredServicemen,
+    additionalServices,
+  ) async {
     log("Query Params: $additionalServices");
     Map<String, dynamic> queryParams = {
       "service_id": serviceId,
@@ -1752,21 +2102,64 @@ class SlotBookingProvider with ChangeNotifier {
     try {
       await apiServices
           .getApi(api.step2Booking, queryParams, isToken: true, isData: true)
-          .then(
-        (value) {
-          if (value.isSuccess!) {
-            step2Data = Step2Model.fromJson(value.data);
+          .then((value) {
+            if (value.isSuccess!) {
+              step2Data = Step2Model.fromJson(value.data);
 
-            log("message-=-=-=-=-=-=-=-=-=-=-=-=-=258${value.data}");
-          } else {
-            log("message-=-=-=-=-=-=-=-=-=-=-=-=-=${value.message}");
-          }
+              log("message-=-=-=-=-=-=-=-=-=-=-=-=-=258${value.data}");
+            } else {
+              log("message-=-=-=-=-=-=-=-=-=-=-=-=-=${value.message}");
+            }
 
-          notifyListeners();
-        },
-      );
+            notifyListeners();
+          });
     } catch (e, s) {
       print("API Error: $e\nStackTrace: $s");
     }
+  }
+
+  void _updateCombinedSlotTime() {
+    slotChosenValue = "$_selectedHour:$_selectedMinute $_selectedPeriod";
+
+    int hour = int.parse(_selectedHour);
+    int minute = int.parse(_selectedMinute);
+
+    if (_selectedPeriod == "PM" && hour < 12) {
+      hour += 12;
+    } else if (_selectedPeriod == "AM" && hour == 12) {
+      hour = 0;
+    }
+
+    DateTime baseDate = selectedDay ?? DateTime.now();
+    DateTime updatedDateTime = DateTime(
+      baseDate.year,
+      baseDate.month,
+      baseDate.day,
+      hour,
+      minute,
+    );
+
+    focusedDay.value = updatedDateTime;
+    if (servicesCart != null) {
+      servicesCart!.serviceDate = updatedDateTime;
+      servicesCart!.selectedDateTimeFormat = _selectedPeriod;
+    }
+
+    notifyListeners();
+  }
+
+  void updateHour(String newValue) {
+    _selectedHour = newValue;
+    _updateCombinedSlotTime();
+  }
+
+  void updateMinute(String newValue) {
+    _selectedMinute = newValue;
+    _updateCombinedSlotTime();
+  }
+
+  void updatePeriod(String newValue) {
+    _selectedPeriod = newValue;
+    _updateCombinedSlotTime();
   }
 }

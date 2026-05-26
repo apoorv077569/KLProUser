@@ -1,7 +1,6 @@
 import 'package:klpro_user/screens/app_pages_screens/slot_booking_screen/layouts/step_one_layout.dart';
 import 'package:klpro_user/screens/app_pages_screens/slot_booking_screen/layouts/step_two_layout.dart';
 import 'package:provider/provider.dart';
-
 import '../../../config.dart';
 
 class SlotBookingScreen extends StatefulWidget {

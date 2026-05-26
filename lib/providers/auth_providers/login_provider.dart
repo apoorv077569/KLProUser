@@ -50,8 +50,7 @@ class LoginProvider with ChangeNotifier {
       // Optional: if you need to set clientId/serverClientId do it once at app startup:
       await googleSignIn.initialize(
         /// SERVICECLIENTID
-        serverClientId:
-            'Enter your service client id',
+        serverClientId: 'Enter your service client id',
       );
 
       // Authenticate the user (replaces old signIn() call).
@@ -67,8 +66,8 @@ class LoginProvider with ChangeNotifier {
       if (idToken == null) {
         log('Google Sign-In succeeded but idToken is null');
         if (context.mounted) {
-        hideLoading(context);
-      }
+          hideLoading(context);
+        }
         return;
       }
       /*  final FirebaseAuth auth = FirebaseAuth.instance;
@@ -83,11 +82,7 @@ class LoginProvider with ChangeNotifier {
         idToken: googleSignInAuthentication.idToken,
       );
       User? user = (await auth.signInWithCredential(credential)).user; */
-      socialLogin(
-        context,
-        googleUser.email,
-        googleUser.displayName,
-      );
+      socialLogin(context, googleUser.email, googleUser.displayName);
       notifyListeners();
     } catch (e) {
       log("kbjhfjuht $e");
@@ -110,33 +105,39 @@ class LoginProvider with ChangeNotifier {
     var body = {
       "login_type": "google",
       "user": {"email": email, "name": displayName},
-      "fcm_token": token
+      "fcm_token": token,
     };
 
     try {
-      await apiServices
-          .postApi(api.socialLogin, jsonEncode(body))
-          .then((value) async {
+      await apiServices.postApi(api.socialLogin, jsonEncode(body)).then((
+        value,
+      ) async {
         notifyListeners();
         if (value.isSuccess!) {
           pref = await SharedPreferences.getInstance();
           pref!.setBool(session.isContinueAsGuest, false);
           String? token = pref?.getString(session.accessToken);
           log("TOKEN :%sss$token");
-          final appDetails =
-              Provider.of<AppDetailsProvider>(context, listen: false);
+          final appDetails = Provider.of<AppDetailsProvider>(
+            context,
+            listen: false,
+          );
           appDetails.getAppPages();
-          final commonApi =
-              Provider.of<CommonApiProvider>(context, listen: false);
+          final commonApi = Provider.of<CommonApiProvider>(
+            context,
+            listen: false,
+          );
           await commonApi.selfApi(context);
           await commonApi.getDashboardHome(context);
           await commonApi.getDashboardHome2(context);
           await Future.delayed(DurationClass.ms150);
           if (context.mounted) {
-        hideLoading(context);
-      }
-          final locationCtrl =
-              Provider.of<LocationProvider>(context, listen: false);
+            hideLoading(context);
+          }
+          final locationCtrl = Provider.of<LocationProvider>(
+            context,
+            listen: false,
+          );
           locationCtrl.getUserCurrentLocation(context);
           locationCtrl.getLocationList(context);
           locationCtrl.getCountryState();
@@ -147,8 +148,10 @@ class LoginProvider with ChangeNotifier {
 
           final cartCtrl = Provider.of<CartProvider>(context, listen: false);
           cartCtrl.onReady(context);
-          final notifyCtrl =
-              Provider.of<NotificationProvider>(context, listen: false);
+          final notifyCtrl = Provider.of<NotificationProvider>(
+            context,
+            listen: false,
+          );
           notifyCtrl.getNotificationList(context);
           /*Navigator.popUntil(
               context,
@@ -157,11 +160,13 @@ class LoginProvider with ChangeNotifier {
           route.pushReplacementNamed(context, routeName.dashboard);
         } else {
           if (context.mounted) {
-        hideLoading(context);
-      }
+            hideLoading(context);
+          }
           notifyListeners();
           Fluttertoast.showToast(
-              msg: value.message, backgroundColor: appColor(context).red);
+            msg: value.message,
+            backgroundColor: appColor(context).red,
+          );
         }
       });
     } catch (e) {
@@ -173,135 +178,72 @@ class LoginProvider with ChangeNotifier {
     }
   }
 
-  //login
   login(context) async {
     try {
       pref = await SharedPreferences.getInstance();
-      String? token = await getFcmToken();
-
-      log("TOKEN FOR FCM : $token");
 
       showLoading(context);
 
-      var body = {
-        "email": emailController.text,
-        "password": passwordController.text,
-        "role": "user",
-        "fcm_token": token
-      };
+      await Future.delayed(const Duration(seconds: 1)); // dummy loading
 
-      log("body : $body");
+      // Dummy credentials check
+      if (emailController.text == "user@example.com" &&
+          passwordController.text == "123456789") {
+        isGuest = false;
 
-      await apiServices
-          .postApi(api.login, jsonEncode(body))
-          .then((value) async {
-        if (value.isSuccess!) {
-          isGuest = false;
-          notifyListeners();
-          pref!.setBool(session.isContinueAsGuest, false);
-          log("DDDDDDDDDDDD");
-          final commonApi =
-              Provider.of<CommonApiProvider>(context, listen: false);
-          await commonApi.selfApi(context);
+        pref!.setBool(session.isContinueAsGuest, false);
 
-          final userRole = userModel!.role;
-          log("USER:::$userRole");
-          if (userRole != "user") {
-            if (context.mounted) {
-        hideLoading(context);
-      }
-            log("Unauthorized role detected: $userRole");
-            Fluttertoast.showToast(
-              msg: "This action is unauthorized for non-user roles.",
-              backgroundColor: appColor(context).red,
-            );
-            return;
-          }
+        // Dummy token save
+        await pref!.setString(session.accessToken, "dummy_token_123");
 
-          // ✅ All logic continues below (no longer in else block)
+        // Dummy user save
+        await pref!.setString(
+          session.user,
+          jsonEncode({
+            "name": "Dummy User",
+            "email": "user@example.com",
+            "role": "user",
+          }),
+        );
 
-          final dashCtrl =
-              Provider.of<DashboardProvider>(context, listen: false);
-          final review = Provider.of<MyReviewProvider>(context, listen: false);
-          final notifyCtrl =
-              Provider.of<NotificationProvider>(context, listen: false);
-
-          dashCtrl.getBookingHistory(context);
-          review.getMyReview(context);
-          notifyCtrl.getNotificationList(context);
-
-          String? token = pref?.getString(session.accessToken);
-          log("TOKEN :%sss$token");
-          await commonApi.selfApi(context);
-          await commonApi.getDashboardHome(context);
-          await commonApi.getDashboardHome2(context);
-          if (context.mounted) {
-        hideLoading(context);
-      }
-          emailController.text = '';
-          passwordController.text = '';
-          log("message=-=-=-=-=-${pref?.getString(session.booking)}");
-          if (pref!.getString(session.booking) != null) {
-            log("message=-=-=-=-=-1${pref!.getString(session.booking)}");
-            int? lastServiceId = pref!.getInt("lastOpenedServiceId");
-            log("lastServiceId::$lastServiceId");
-            route.pushReplacementNamed(
-              context,
-              routeName.servicesDetailsScreen,
-              args: {'serviceId': lastServiceId},
-            );
-          } else {
-            route.pushReplacementNamed(context, routeName.dashboard);
-          }
-
-          dynamic userData = pref!.getString(session.user);
-          if (userData != null) {
-            log("message=============> $userData");
-            final locationCtrl =
-                Provider.of<LocationProvider>(context, listen: false);
-            await locationCtrl.getLocationList(context);
-            await locationCtrl.getCountryState();
-
-            // [Tester Mode] Immediately fetch zone for testers/guests
-            if (await isTesterMode()) {
-              log("Tester/Guest detected on login, fetching zone...");
-              await locationCtrl.getZoneId(context);
-            }
-
-            if (context.mounted) {
-              final cartCtrl =
-                  Provider.of<CartProvider>(context, listen: false);
-              cartCtrl.onReady(context);
-            }
-            pref!.remove(session.isContinueAsGuest);
-          }
-
-          Fluttertoast.showToast(
-              msg: value.message, backgroundColor: const Color(0xff5465FF));
-
-          if (!context.mounted) {
-            if (context.mounted) {
-        hideLoading(context);
-      }
-          }
-
-          notifyListeners();
-        } else {
-          if (context.mounted) {
-        hideLoading(context);
-      }
-          Fluttertoast.showToast(
-            msg: value.message,
-            backgroundColor: appColor(context).red,
-          );
+        if (context.mounted) {
+          hideLoading(context);
         }
-      });
-    } catch (e, s) {
+
+        emailController.text = '';
+        passwordController.text = '';
+
+        Fluttertoast.showToast(
+          msg: "Dummy Login Successful",
+          backgroundColor: const Color(0xff5465FF),
+        );
+
+        route.pushReplacementNamed(context, routeName.dashboard);
+
+        notifyListeners();
+      } else {
+        if (context.mounted) {
+          hideLoading(context);
+        }
+
+        Fluttertoast.showToast(
+          msg: "Invalid Dummy Credentials",
+          backgroundColor: appColor(context).red,
+        );
+      }
+    } catch (e) {
       if (context.mounted) {
         hideLoading(context);
       }
+
+      log("DUMMY LOGIN ERROR: $e");
+
+      Fluttertoast.showToast(
+        msg: "Dummy Login Failed",
+        backgroundColor: appColor(context).red,
+      );
+
       notifyListeners();
-      log("CATCH login: $e====> $s");
     }
   }
 
@@ -315,27 +257,36 @@ class LoginProvider with ChangeNotifier {
     route.pushReplacementNamed(context, routeName.dashboard);
   }
 
-  locationConformation(
-    context,
-  ) {
+  locationConformation(context) {
     showDialog(
-        context: context,
-        builder: (context1) {
-          return StatefulBuilder(builder: (context2, setState) {
+      context: context,
+      builder: (context1) {
+        return StatefulBuilder(
+          builder: (context2, setState) {
             return Consumer<LocationProvider>(
-                builder: (context3, value, child) {
-              return AlertDialog(
+              builder: (context3, value, child) {
+                return AlertDialog(
                   contentPadding: EdgeInsets.zero,
-                  insetPadding:
-                      const EdgeInsets.symmetric(horizontal: Insets.i20),
+                  insetPadding: const EdgeInsets.symmetric(
+                    horizontal: Insets.i20,
+                  ),
                   shape: const SmoothRectangleBorder(
-                      borderRadius: SmoothBorderRadius.all(SmoothRadius(
-                          cornerRadius: AppRadius.r14, cornerSmoothing: 1))),
+                    borderRadius: SmoothBorderRadius.all(
+                      SmoothRadius(
+                        cornerRadius: AppRadius.r14,
+                        cornerSmoothing: 1,
+                      ),
+                    ),
+                  ),
                   backgroundColor: appColor(context).whiteBg,
-                  content: Stack(alignment: Alignment.topRight, children: [
-                    Column(mainAxisSize: MainAxisSize.min, children: [
-                      // Gif
-                      /* Stack(alignment: Alignment.topCenter, children: [
+                  content: Stack(
+                    alignment: Alignment.topRight,
+                    children: [
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Gif
+                          /* Stack(alignment: Alignment.topCenter, children: [
                         Stack(alignment: Alignment.topCenter, children: [
                           SizedBox(
                                   width: MediaQuery.of(context).size.width,
@@ -349,110 +300,124 @@ class LoginProvider with ChangeNotifier {
                                       BorderRadius.circular(AppRadius.r10)),
                         ]),
                       ]), */
-                      // Sub text
-                      const VSpace(Sizes.s15),
-                      Text(
-                          /* language(context, translations!.logoutDesc) */
-                          "We Need Your Location to Enhance Your Experience.",
-                          textAlign: TextAlign.center,
-                          style: appCss.dmDenseRegular14
-                              .textColor(appColor(context).lightText)
-                              .textHeight(1.3)),
-                      const VSpace(Sizes.s20),
-                      ButtonCommon(
-                          onTap: () async {
-                            final dashCtrl = Provider.of<DashboardProvider>(
+                          // Sub text
+                          const VSpace(Sizes.s15),
+                          Text(
+                            /* language(context, translations!.logoutDesc) */
+                            "We Need Your Location to Enhance Your Experience.",
+                            textAlign: TextAlign.center,
+                            style: appCss.dmDenseRegular14
+                                .textColor(appColor(context).lightText)
+                                .textHeight(1.3),
+                          ),
+                          const VSpace(Sizes.s20),
+                          ButtonCommon(
+                            onTap: () async {
+                              final dashCtrl = Provider.of<DashboardProvider>(
                                 context,
-                                listen: false);
-                            final locationCtrl = Provider.of<LocationProvider>(
-                                context,
-                                listen: false);
-
-                            final review = Provider.of<MyReviewProvider>(
-                                context,
-                                listen: false);
-
-                            final notifyCtrl =
-                                Provider.of<NotificationProvider>(context,
-                                    listen: false);
-                            await locationCtrl.getZoneId(context);
-                            dashCtrl.getBookingHistory(context);
-                            // favCtrl.getFavourite();
-                            review.getMyReview(context);
-
-                            notifyCtrl.getNotificationList(context);
-                            String? token =
-                                pref?.getString(session.accessToken);
-                            log("TOKEN :%sss$token");
-                            final commonApi = Provider.of<CommonApiProvider>(
-                                context,
-                                listen: false);
-                            await commonApi.selfApi(context);
-
-                            commonApi.getDashboardHome(context);
-                            commonApi.getDashboardHome2(context);
-
-                            // if (pref!.getString(session.booking) != null) {
-                            //
-                            //   route.pushReplacementNamed(
-                            //       context, routeName.servicesDetailsScreen);
-                            //   /*  bookingCtrl.getBookingDetails(context); */
-                            // } else {
-                            //   route.pushReplacementNamed(
-                            //       context, routeName.dashboard);
-                            // }
-                            /*    route.pushReplacementNamed(context, routeName.dashboard); */
-                            dynamic userData = pref!.getString(session.user);
-
-                            if (userData != null) {
-                              log("message=============> $userData");
+                                listen: false,
+                              );
                               final locationCtrl =
-                                  Provider.of<LocationProvider>(context,
-                                      listen: false);
-                              /*locationCtrl.getUserCurrentLocation(context);*/
-                              await locationCtrl.getLocationList(context);
-                              await locationCtrl.getCountryState();
-                              // WidgetsBinding.instance.addPostFrameCallback((_) {
-                              //   final dashCtrl =
-                              //       Provider.of<DashboardProvider>(context, listen: false);
-                              //   dashCtrl.getJobRequest();
-                              // });
-                              if (context.mounted) {
-                                final cartCtrl = Provider.of<CartProvider>(
+                                  Provider.of<LocationProvider>(
                                     context,
-                                    listen: false);
-                                cartCtrl.onReady(context);
+                                    listen: false,
+                                  );
+
+                              final review = Provider.of<MyReviewProvider>(
+                                context,
+                                listen: false,
+                              );
+
+                              final notifyCtrl =
+                                  Provider.of<NotificationProvider>(
+                                    context,
+                                    listen: false,
+                                  );
+                              await locationCtrl.getZoneId(context);
+                              dashCtrl.getBookingHistory(context);
+                              // favCtrl.getFavourite();
+                              review.getMyReview(context);
+
+                              notifyCtrl.getNotificationList(context);
+                              String? token = pref?.getString(
+                                session.accessToken,
+                              );
+                              log("TOKEN :%sss$token");
+                              final commonApi = Provider.of<CommonApiProvider>(
+                                context,
+                                listen: false,
+                              );
+                              await commonApi.selfApi(context);
+
+                              commonApi.getDashboardHome(context);
+                              commonApi.getDashboardHome2(context);
+
+                              // if (pref!.getString(session.booking) != null) {
+                              //
+                              //   route.pushReplacementNamed(
+                              //       context, routeName.servicesDetailsScreen);
+                              //   /*  bookingCtrl.getBookingDetails(context); */
+                              // } else {
+                              //   route.pushReplacementNamed(
+                              //       context, routeName.dashboard);
+                              // }
+                              /*    route.pushReplacementNamed(context, routeName.dashboard); */
+                              dynamic userData = pref!.getString(session.user);
+
+                              if (userData != null) {
+                                log("message=============> $userData");
+                                final locationCtrl =
+                                    Provider.of<LocationProvider>(
+                                      context,
+                                      listen: false,
+                                    );
+                                /*locationCtrl.getUserCurrentLocation(context);*/
+                                await locationCtrl.getLocationList(context);
+                                await locationCtrl.getCountryState();
+                                // WidgetsBinding.instance.addPostFrameCallback((_) {
+                                //   final dashCtrl =
+                                //       Provider.of<DashboardProvider>(context, listen: false);
+                                //   dashCtrl.getJobRequest();
+                                // });
+                                if (context.mounted) {
+                                  final cartCtrl = Provider.of<CartProvider>(
+                                    context,
+                                    listen: false,
+                                  );
+                                  cartCtrl.onReady(context);
+                                }
+                                pref!.remove(session.isContinueAsGuest);
                               }
-                              pref!.remove(session.isContinueAsGuest);
-                            }
-                            /* Fluttertoast.showToast(
+                              /* Fluttertoast.showToast(
                               msg: value.message,
                               backgroundColor: appColor(context).primary,
                             ); */
-                            if (!context.mounted) {
-                              if (context.mounted) {
-        hideLoading(context);
-      }
-                            }
-                            emailController.text = "";
-                            passwordController.text = "";
-                            notifyListeners();
-                          } /* => route.pop(context) */,
-                          title: "Current Location",
-                          borderColor: appColor(context).primary,
-                          color: appColor(context).whiteBg,
-                          style: appCss.dmDenseSemiBold16
-                              .textColor(appColor(context).primary)),
-                      const VSpace(Sizes.s20),
-                      ButtonCommon(
-                        title: "Manualy",
-                        color: appColor(context).primary,
-                        onTap: () async {
-                          route.pushNamed(
-                            context,
-                            routeName.currentLocation, /*  arg: true */
-                          );
-                          /*  route
+                              if (!context.mounted) {
+                                if (context.mounted) {
+                                  hideLoading(context);
+                                }
+                              }
+                              emailController.text = "";
+                              passwordController.text = "";
+                              notifyListeners();
+                            } /* => route.pop(context) */,
+                            title: "Current Location",
+                            borderColor: appColor(context).primary,
+                            color: appColor(context).whiteBg,
+                            style: appCss.dmDenseSemiBold16.textColor(
+                              appColor(context).primary,
+                            ),
+                          ),
+                          const VSpace(Sizes.s20),
+                          ButtonCommon(
+                            title: "Manualy",
+                            color: appColor(context).primary,
+                            onTap: () async {
+                              route.pushNamed(
+                                context,
+                                routeName.currentLocation /*  arg: true */,
+                              );
+                              /*  route
                               .pushNamed(context, routeName.location)
                               .then((e) {
                             /* animationController!.reset(); */
@@ -463,11 +428,12 @@ class LoginProvider with ChangeNotifier {
                                 listen: false);
                             location.getLocationList(context);
                           }); */
-                        },
-                        style: appCss.dmDenseSemiBold16
-                            .textColor(appColor(context).whiteColor),
-                      )
-                      /* Row(children: [
+                            },
+                            style: appCss.dmDenseSemiBold16.textColor(
+                              appColor(context).whiteColor,
+                            ),
+                          ),
+                          /* Row(children: [
                         Expanded(
                             child: ButtonCommon(
                                 onTap: () => route.pop(context),
@@ -486,27 +452,40 @@ class LoginProvider with ChangeNotifier {
                               .textColor(appColor(context).whiteColor),
                         ))
                       ]) */
-                    ]).padding(
+                        ],
+                      ).padding(
                         horizontal: Insets.i20,
                         top: Insets.i60,
-                        bottom: Insets.i20),
-                    Row(
+                        bottom: Insets.i20,
+                      ),
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           // Title
                           Text(
-                              language(context, translations!.logOut)
-                                  .replaceAll(" ", ""),
-                              style: appCss.dmDenseExtraBold18
-                                  .textColor(appColor(context).darkText)),
-                          Icon(CupertinoIcons.multiply,
-                                  size: Sizes.s20,
-                                  color: appColor(context).darkText)
-                              .inkWell(onTap: () => route.pop(context))
-                        ]).paddingAll(Insets.i20)
-                  ]));
-            });
-          });
-        });
+                            language(
+                              context,
+                              translations!.logOut,
+                            ).replaceAll(" ", ""),
+                            style: appCss.dmDenseExtraBold18.textColor(
+                              appColor(context).darkText,
+                            ),
+                          ),
+                          Icon(
+                            CupertinoIcons.multiply,
+                            size: Sizes.s20,
+                            color: appColor(context).darkText,
+                          ).inkWell(onTap: () => route.pop(context)),
+                        ],
+                      ).paddingAll(Insets.i20),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
   }
 }

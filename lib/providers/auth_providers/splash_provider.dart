@@ -11,7 +11,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../config.dart';
 import '../../helper/notification.dart';
 
-
 class SplashProvider extends ChangeNotifier {
   double size = 10;
   double roundSize = 10;
@@ -28,99 +27,102 @@ class SplashProvider extends ChangeNotifier {
 
   Future<void> onReady(BuildContext context) async {
     final preferences = await SharedPreferences.getInstance();
-    final isAvailable = await isNetworkConnection();
-    // getAppSettingList(context);
 
+    final isAvailable = await isNetworkConnection();
+
+    /// NO INTERNET
     if (!isAvailable) {
       onDispose();
+
       route.pushReplacementNamed(context, routeName.noInternet);
+
       return;
     }
 
-    /* LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        // Handle permanent denial
-        log("Location permissions are denied");
-        return;
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      log("Location permissions are permanently denied");
-      return;
-    } */
-    final loc = Provider.of<LocationProvider>(context, listen: false);
-    // Wrap getZoneId with a timeout so it never hangs forever on first install
-    await loc.getZoneId(context).timeout(
-          const Duration(seconds: 10),
-          onTimeout: () {
-            log("getZoneId timed out — continuing with fallback");
-          },
-        );
-
-    final commonApi = Provider.of<CommonApiProvider>(context, listen: false);
+    /// PROVIDERS
     final login = Provider.of<LoginProvider>(context, listen: false);
-    final dash = Provider.of<DashboardProvider>(context, listen: false);
+
     final language = Provider.of<LanguageProvider>(context, listen: false);
+
     language.getLanguage();
+
     final bool isIntro = preferences.getBool(session.isIntro) ?? false;
+
     final String? userData = preferences.getString(session.user);
+
+    /// DISABLED API CALLS
+    // final loc =
+    // Provider.of<LocationProvider>(
+    //   context,
+    //   listen: false,
+    // );
+
+    // await loc.getZoneId(context);
+
+    // final commonApi =
+    // Provider.of<CommonApiProvider>(
+    //   context,
+    //   listen: false,
+    // );
+
+    // locationCtrl.getCountryState();
+
+    // await getAppSettingList(context);
+
+    // await loadDashboardApis(context);
+
+    /// NOTIFICATION INIT
     CustomNotificationController().initNotification(context);
 
-    bool isAuthenticate = false;
-    final locationCtrl = Provider.of<LocationProvider>(context, listen: false);
-    locationCtrl.getCountryState();
-    if (userData != null) {
-    await getAppSettingList(context);
-      isAuthenticate = await commonApi.checkForAuthenticate();
-      await preferences.remove(session.isContinueAsGuest);
-    }
+    /// TOKEN
     String? token = preferences.getString(session.accessToken);
-    log("token token: $token");
-    // Handle routing logic based on intro flag and user authentication
+
+    debugPrint("APPU_DEBUG TOKEN => $token");
+
+    /// ================= INTRO FLOW =================
+
     if (isIntro) {
+      /// GUEST USER
       if (token == null) {
-        log("ajkshdjkasdhasd $token");
-        /*  final loc = Provider.of<LocationProvider>(context, listen: false); */
-        // await loc.getZoneId(context, isLocation: false); // Already called at line 51
         preferences.setBool(session.isContinueAsGuest, true);
-        log("ajkfhadkjfndjkfbdsfjnbds s ${preferences.getBool(session.isContinueAsGuest)}");
+
+        debugPrint("APPU_DEBUG GUEST LOGIN");
       }
 
-      log("isIntro::$isIntro");
-      await loadDashboardApis(context);
-      if (userData != null && isAuthenticate && token != null) {
-        log("ISisAuthenticate $token");
-        preferences.setBool(session.isContinueAsGuest, false);
-        commonApi.selfApi(context);
-        // await loadDashboardApis(context);
-        // dash.getBookingHistory(context);
-        final isMaintenance =
-            appSettingModel?.maintenance?.maintenanceMode == '1';
-        final targetRoute =
-            isMaintenance ? routeName.maintenance : routeName.dashboard;
-      route.pushReplacementNamed(context, routeName.dashboard);
+      /// ================= LOGIN FLOW =================
+
+      if (userData != null && token != null) {
+        debugPrint("APPU_DEBUG USER ALREADY LOGIN");
+
+        debugPrint("APPU_DEBUG OPEN DASHBOARD");
+
+        route.pushReplacementNamed(context, routeName.dashboard);
       } else {
+        debugPrint("APPU_DEBUG GUEST USER");
+
         preferences.setBool(session.isContinueAsGuest, true);
-        // await loadDashboardApis(context); // Already called above
-        _handleLogout(preferences);
+
         login.continueAsGuestTap(context);
       }
     } else {
-      await loadDashboardApis(context);
-      getAppSettingList(context).then((value) {
-        route.pushReplacementNamed(context, routeName.onBoarding);
-      });
+      /// ONBOARDING
+      debugPrint("APPU_DEBUG OPEN ONBOARDING");
+
+      route.pushReplacementNamed(context, routeName.onBoarding);
     }
 
-    // Mark splash as complete so pending notifications can be processed
+    /// SPLASH READY
     isSplashReady = true;
+
     if (pendingInitialMessage != null && context.mounted) {
-      log("Processing pending notification after splash ready");
-      CustomNotificationController()
-          .showFlutterNotification(pendingInitialMessage!, true, context);
+      debugPrint("APPU_DEBUG PROCESS NOTIFICATION");
+
+      CustomNotificationController().showFlutterNotification(
+        pendingInitialMessage!,
+        true,
+        context,
+      );
+
       pendingInitialMessage = null;
     }
   }
@@ -131,8 +133,10 @@ class SplashProvider extends ChangeNotifier {
     setPrimaryAddress = null;
     userPrimaryAddress = null;
 
-    final dash = Provider.of<DashboardProvider>(navigatorKey.currentContext!,
-        listen: false);
+    final dash = Provider.of<DashboardProvider>(
+      navigatorKey.currentContext!,
+      listen: false,
+    );
     dash.selectIndex = 0;
     dash.notifyListeners();
 
@@ -359,12 +363,14 @@ class SplashProvider extends ChangeNotifier {
     }
   }*/
 
-//setting list
+  //setting list
   bool isLoading = true;
 
   Future<void> getAppSettingList(BuildContext context) async {
-    final currencyProvider =
-        Provider.of<CurrencyProvider>(context, listen: false);
+    final currencyProvider = Provider.of<CurrencyProvider>(
+      context,
+      listen: false,
+    );
     try {
       isLoading = true;
       notifyListeners();
@@ -373,7 +379,9 @@ class SplashProvider extends ChangeNotifier {
       if (value.isSuccess!) {
         appSettingModel = AppSettingModel.fromJson(value.data['values']);
         onboardingScreens = appSettingModel?.onboarding ?? [];
-        log("appSettingModel!.general!.defaultLanguage:${appSettingModel!.general!.defaultLanguage!.locale}");
+        log(
+          "appSettingModel!.general!.defaultLanguage:${appSettingModel!.general!.defaultLanguage!.locale}",
+        );
         onUpdate(currencyProvider, appSettingModel!.general!.defaultCurrency!);
         onUpdateLanguage(context, appSettingModel!.general!.defaultLanguage!);
 
@@ -463,7 +471,9 @@ class SplashProvider extends ChangeNotifier {
   }
 
   Future<void> onUpdate(
-      CurrencyProvider currencyData, CurrencyModel data) async {
+    CurrencyProvider currencyData,
+    CurrencyModel data,
+  ) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
 
     double? currencyVal = pref.getDouble(session.currencyVal);
@@ -488,14 +498,29 @@ class SplashProvider extends ChangeNotifier {
 
   onDispose() async {
     bool isAvailable = await isNetworkConnection();
+
     if (!isAvailable) {
-      popUpAnimationController!.dispose();
-      controller2!.dispose();
-      controller3!.dispose();
-      animation3!.isDismissed;
-      controller!.dispose();
-      controllerSlide!.dispose();
-      popUpAnimationController!.dispose();
+      debugPrint("APPU_DEBUG SAFE DISPOSE");
+
+      if (popUpAnimationController != null) {
+        popUpAnimationController!.dispose();
+      }
+
+      if (controller2 != null) {
+        controller2!.dispose();
+      }
+
+      if (controller3 != null) {
+        controller3!.dispose();
+      }
+
+      if (controller != null) {
+        controller!.dispose();
+      }
+
+      if (controllerSlide != null) {
+        controllerSlide!.dispose();
+      }
     }
   }
 
